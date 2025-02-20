@@ -1,0 +1,38 @@
+{
+  "name": "johan",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server",
+    "build": "vite build",
+    "build:client": "vite build --outDir dist/client",
+    "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
+    "preview": "cross-env NODE_ENV=production node index",
+    "check": "vue-tsc",
+    "serve": "pnpm run build && pnpm run preview"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "^0.3.0",
+    "compression": "^1.7.5",
+    "express": "^5.0.1",
+    "pinia": "^3.0.1",
+    "sirv": "^3.0.0",
+    "vee-validate": "^4.15.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "vuetify": "^3.7.12"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^4.1.1",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.9",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.1",
+    "vite-plugin-vuetify": "^2.1.0",
+    "vue-tsc": "^2.1.10"
+  }
+}

@@ -1,0 +1,9 @@
+@layer restore {
+    a {
+        text-decoration: none;
+    }
+
+    :where(*) {
+        color: inherit;
+    }
+}
