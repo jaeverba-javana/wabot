@@ -14,11 +14,11 @@ export const routes: RouteRecordRaw[] = [
         children: [{
             path: 'login',
             name: 'Login',
-            component: () => import('@/ui/components/auth/LoginAuthComponent.vue')
+            component: () => import('@/ui/views/auth/LoginAuthComponent.vue')
         },{
             path: 'signup',
             name: 'Signup',
-            component: () => import('@/ui/components/auth/SignupAuthComponent.vue')
+            component: () => import('@/ui/views/auth/SignupAuthComponent.vue')
         }]
     },
     {

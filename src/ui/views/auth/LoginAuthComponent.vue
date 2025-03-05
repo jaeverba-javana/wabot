@@ -42,14 +42,12 @@ export default defineComponent({
     const password = useField('password')
 
     const isAllCorrect = computed(() => {
-      console.log(email.errors.value.length && password.errors.value.length)
-      console.log(email.value.value || password.value.value)
+      // console.log(email.errors.value.length && password.errors.value.length)
+      // console.log(email.value.value || password.value.value)
 
-          return !email.errors.value.length && !password.errors.value.length
-          && email.value.value && password.value.value
-        }
-
-    )
+      return !email.errors.value.length && !password.errors.value.length
+        && email.value.value && password.value.value
+    })
 
     return {
       email,
@@ -73,6 +71,7 @@ export default defineComponent({
               type="email"
               v-model="email.value.value"
               :error-messages="email.errorMessage.value"
+              autofocus
           />
 
           <VTextField
@@ -86,7 +85,12 @@ export default defineComponent({
 
       </div>
 
-      <VBtn :disabled="!isAllCorrect" type="submit" :loading="isLoading" text="Iniciar sesi&oacute;n"/>
+      <VBtn
+       :disabled="isLoading || !isAllCorrect"
+        type="submit"
+         :loading="isLoading" 
+         text="Iniciar sesi&oacute;n"
+         />
     </VContainer>
   </VForm>
 </template>

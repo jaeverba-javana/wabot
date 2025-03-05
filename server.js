@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises'
 import express from 'express'
+import cookieParser from 'cookie-parser';
 
 import {BASE as base, IS_PRODUCTION as isProduction} from "./server/utils/contants.js";
+import { isAuthenticated } from './server/api/auth.js';
 
 // Cached production assets
 const templateHtml = isProduction
@@ -29,9 +31,19 @@ if (!isProduction) {
   app.use(base, sirv('./dist/client', { extensions: [] }))
 }
 
+// Add cookie parser
+app.use(cookieParser())
+
 // Serve HTML
 app.use('*all', async (req, res) => {
   console.log(req.originalUrl)
+
+  const user = await isAuthenticated(req)
+
+  if ((["/login", "/signup"].includes(req.baseUrl)) && user) res.redirect("/")
+  else if (!(["/login", "/signup"].includes(req.baseUrl)) && !user) res.redirect("/login")
+  else
+
   try {
     const url = req.originalUrl.replace(base, '')
 

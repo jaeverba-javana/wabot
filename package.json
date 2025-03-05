@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server",
+    "dev": "nodemon index",
     "build": "vite build",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
@@ -15,7 +15,11 @@
   "dependencies": {
     "@material/material-color-utilities": "^0.3.0",
     "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
     "express": "^5.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.12.0",
     "pinia": "^3.0.1",
     "sirv": "^3.0.0",
     "vee-validate": "^4.15.0",
