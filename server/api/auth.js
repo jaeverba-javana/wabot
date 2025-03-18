@@ -28,8 +28,6 @@ export const notAuthenticated = async (req, res, next) => {
 export const isAuthenticated = async (req) => {
     const userToken = req.cookies["SESSION_TOKEN"];
     
-    console.log("userToken:", userToken); // Todo: Remove log
-    
 
     if (userToken) {
         const decoded = tokenDecode(userToken);

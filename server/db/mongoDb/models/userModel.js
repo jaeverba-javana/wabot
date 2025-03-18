@@ -37,14 +37,14 @@ const userSchema = new Schema({
     //   'username': {$exists: true}
     // }
   },
-  containerName: {
+  /* containerName: {
     required: false,
     type: String,
     unique: true,
     validate: (v) => {
       return /^[a-z0-9]([-a-z0-9](?!-{2})){1,61}[a-z0-9]$/.test(v);
     },
-  },
+  }, */
 },{
   virtuals: {
     isDataComplete: {
