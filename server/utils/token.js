@@ -13,11 +13,11 @@ const sk = process.env.SECRET_TOKEN?? 'sckey';
  * @returns The generated JWT as a string.
  */
 export function tokenGenerate(
-    payload, options
+    payload, options = {}
 ) {
     const _options = extend(
-        {expires: '1M'},
-        options = {}
+        {expiresIn: '1M'},
+        options
     )
 
     return jwt.sign(payload, sk, _options) 

@@ -1,12 +1,15 @@
 <script lang="ts">
 import {computed, defineComponent, ref} from 'vue'
 import {useField, useForm} from "vee-validate";
+import { axiosApi } from '../../../utils/axios';
+import { useRouter } from 'vue-router';
 
 
 
 export default defineComponent({
   name: "LoginAuthComponent",
   setup() {
+    const router = useRouter()
     const isLoading = ref(false);
 
     const {handleSubmit} = useForm({
@@ -15,7 +18,7 @@ export default defineComponent({
           if(!value)
             return 'Campo vacío'
 
-          if(!(/^[^.]([\w-+%.](?!\.{2}))+[^.]@([^-][-a-z]+[^-]\.)?([^-][-a-z]+[^-])(\.[a-z]{2,}){1,2}$/.test(value)))
+          if(!(/^[\w-+%]([\w-+%.](?!\.{2}))+[\w-+%]@([^-][-a-z]+[^-]\.)?([^-][-a-z]+[^-])(\.[a-z]{2,}){1,2}$/.test(value)))
             return 'Email inválido'
 
           return true
@@ -27,19 +30,34 @@ export default defineComponent({
           if(value.length < 8)
             return 'Contraseña demasiado corta'
 
-
-
           return true
         }
       }
     })
 
-    const onSubmit = handleSubmit(values => {
-      isLoading.value = true
-    })
-
     const email = useField('email')
     const password = useField('password')
+
+    const onSubmit = handleSubmit(values => {
+      isLoading.value = true
+
+      axiosApi.post('/auth/login', {
+        email: email.value.value,
+        password: password.value.value
+      }).then((r: any) => {
+        isLoading.value = false
+        
+        if (r.status === 200) {
+          router.push('/console')
+        }
+        
+      }).catch((r: any) => {
+        isLoading.value = false
+      })
+
+      // email.value.value = ''
+      // password.value.value = ''
+    })
 
     const isAllCorrect = computed(() => {
       // console.log(email.errors.value.length && password.errors.value.length)

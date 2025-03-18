@@ -12,6 +12,9 @@ export default defineConfig({
       "@": fileURLToPath(new URL('./src', import.meta.url)),
       '@Views': fileURLToPath(new URL('./src/ui/views', import.meta.url)),
       '@Utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
+      '@Components': fileURLToPath(new URL('./src/ui/components', import.meta.url)),
+      '@Fragments': fileURLToPath(new URL('./src/fragments', import.meta.url)),
+      '@Layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
     }
   }
 })

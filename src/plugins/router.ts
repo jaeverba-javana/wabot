@@ -25,7 +25,19 @@ export const routes: RouteRecordRaw[] = [
         path: '/:notFound(.*)*',
         name: 'notFound',
         component: () => import('@/ui/layouts/NotFoundLayout.vue')
-    }
+    },
+    {
+        path: '/',
+        name: 'HomeLayout',
+        component: HomeLayout,
+        children: [
+            {
+                path: 'console',
+                name: 'consoleView',
+                component: () => import('@Views/ConsoleView.vue')
+            }    
+        ]
+    },
 ]
 
 export default createRouter({

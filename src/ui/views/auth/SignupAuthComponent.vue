@@ -29,6 +29,7 @@ export default defineComponent({
 
           return true
         },
+        // @ts-ignore
         passwordConfirmation(value: string, { form }) {
           if (!value)
             return 'Campo vacío'
@@ -61,15 +62,16 @@ export default defineComponent({
           email: labels.email.value.value,
           password: labels.password.value.value
         }
-      }).then((r) => {
+      }).then((r: any) => {
         console.log(r.data);
 
-      }).catch((r) => {
+      }).catch((r: any) => {
         isLoading.value = false
         if (r.status === 500) {
           const reason = r.response.data.reason
           if (reason.code === 11000) {
             console.log(reason);
+            // @ts-ignore
             labels[reason.labels[0]].setErrors("Un usuario ya escribió esto")
 
           }
