@@ -1,8 +1,8 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue'
 import { useField, useForm } from 'vee-validate'
+// @ts-ignore Working
 import { axiosApi } from '@Utils/axios.ts'
-import { log } from 'console';
 
 export default defineComponent({
   name: "SignUpAuthComponent",
@@ -54,7 +54,7 @@ export default defineComponent({
       passwordConfirmation: useField('passwordConfirmation'),
     }
 
-    const onSubmit = handleSubmit(values => {
+    const onSubmit = handleSubmit(() => {
       isLoading.value = true
 
       axiosApi.post('/auth/register', {

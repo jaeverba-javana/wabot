@@ -4,11 +4,6 @@ import HomeLayout from "@/ui/layouts/HomeLayout.vue";
 export const routes: RouteRecordRaw[] = [
     {
         path: '/',
-        name: 'HomeLayout',
-        component: HomeLayout
-    },
-    {
-        path: '/',
         name: 'AuthLayout',
         component: () => import("@/ui/layouts/AuthLayout.vue"),
         children: [{
@@ -32,10 +27,20 @@ export const routes: RouteRecordRaw[] = [
         component: HomeLayout,
         children: [
             {
+                path: '',
+                name: 'Dashboard',
+                component: () => import('@Views/ConsoleView.vue')
+            },
+            {
                 path: 'console',
                 name: 'consoleView',
                 component: () => import('@Views/ConsoleView.vue')
-            }    
+            },
+            {
+                path: 'chatbot',
+                name: 'chatbotView',
+                component: () => import('@/ui/views/ChatbotView.vue')
+            }
         ]
     },
 ]
