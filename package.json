@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon index",
-    "build": "vite build",
+    "build": "npm run build:client && npm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
     "preview": "cross-env NODE_ENV=production node index",
     "check": "vue-tsc",
-    "serve": "pnpm run build && pnpm run preview"
+    "serve": "vite build --outDir dist && npm run preview"
   },
   "dependencies": {
     "@material/material-color-utilities": "^0.3.0",

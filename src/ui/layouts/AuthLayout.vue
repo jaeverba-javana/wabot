@@ -11,13 +11,13 @@ export default defineComponent({
     <v-card rounded="lg">
       <div class="authWrapper">
         <div class="top">
-          <RouterLink class="container elevation-24" to="/login">
+          <RouterLink class="container elevation-24" to="/auth/login">
             <div class="login elevation-5">
               <h2>Iniciar sesi&oacute;n</h2>
             </div>
           </RouterLink>
 
-          <RouterLink class="container elevation-24" to="/signup">
+          <RouterLink class="container elevation-24" to="/auth/signup">
             <div class="signup">
               <h2>Registrarse</h2>
             </div>
@@ -37,12 +37,18 @@ export default defineComponent({
 .AuthLayout {
 height: 100dvh;
 
-  justify-items: center;
+  justify-items: start;
   align-content: center;
+
+  background-image: url("/bot.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 .v-card {
   background-color: rgba(var(--v-theme-primary), .7);
+
+  margin-left: 10%;
 
   .authWrapper {
     interpolate-size: allow-keywords;
@@ -53,6 +59,7 @@ height: 100dvh;
     height: max-content;
     transition-duration: .2s;
     transition-property: height;
+
   }
   .top {
     display: flex;
@@ -80,9 +87,7 @@ height: 100dvh;
       }
 
       &.router-link-active {
-
         z-index: 1;
-
 
         > * {
           background-color: rgb(var(--v-theme-surface));

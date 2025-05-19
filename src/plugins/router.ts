@@ -1,9 +1,16 @@
 import {RouteRecordRaw, createRouter, createWebHistory} from "vue-router";
 import HomeLayout from "@/ui/layouts/HomeLayout.vue";
+import RootLayout from "@/ui/layouts/RootLayout.vue";
 
 export const routes: RouteRecordRaw[] = [
     {
         path: '/',
+        name: 'RootLayout',
+        component: RootLayout,
+        meta: { requiresGuest: true }
+    },
+    {
+        path: '/auth',
         name: 'AuthLayout',
         component: () => import("@/ui/layouts/AuthLayout.vue"),
         children: [{
@@ -25,6 +32,7 @@ export const routes: RouteRecordRaw[] = [
         path: '/',
         name: 'HomeLayout',
         component: HomeLayout,
+        meta: { requiresAuth: true },
         children: [
             {
                 path: '',

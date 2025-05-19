@@ -7,8 +7,8 @@ export default defineComponent({
     return {
       drawer: true,
       items: [
-        { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/' },
-        { title: 'Chatbot WhatsApp', icon: 'mdi-chat', to: '/chatbot' },
+        { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/console' },
+        { title: 'Configuración', icon: 'mdi-chat', to: '/chatbot' },
       ],
     }
   }

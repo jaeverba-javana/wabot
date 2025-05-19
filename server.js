@@ -29,7 +29,7 @@ if (!isProduction) {
   const compression = (await import('compression')).default
   const sirv = (await import('sirv')).default
   app.use(compression())
-  app.use(base, sirv('./dist/client', { extensions: [] }))
+  app.use(base, sirv('./dist', { extensions: [] }))
 }
 
 app.use(express.json())
@@ -110,11 +110,11 @@ app.get('*all', async (req, res) => {
 
   const user = await isAuthenticated(req)
 
-  const authExcluded = ["/login", "/signup", "/"]
+  const authExcluded = ["/auth/login", "/login/signup", "/"]
   
   
-  if ((authExcluded.includes(req.originalUrl)) && user) res.redirect("/")
-  else if (!(authExcluded.includes(req.originalUrl)) && !user) res.redirect("/login")
+  if ((authExcluded.includes(req.originalUrl)) && user) res.redirect("/console")
+  else if (!(authExcluded.includes(req.originalUrl)) && !user) res.redirect("/auth/login")
   else
 
   try {
