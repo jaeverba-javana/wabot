@@ -13,7 +13,9 @@
     "serve": "vite build --outDir dist && npm run preview"
   },
   "dependencies": {
+    "@jamescoyle/vue-icon": "^0.1.2",
     "@material/material-color-utilities": "^0.3.0",
+    "@mdi/js": "^7.4.47",
     "argon2": "^0.41.1",
     "axios": "^1.8.3",
     "compression": "^1.7.5",

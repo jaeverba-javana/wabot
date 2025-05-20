@@ -3,6 +3,8 @@ import {createVuetify, ThemeInstance} from "vuetify";
 import themeJson from '@/assets/material-theme.json' with {type: 'json'}
 import {md3} from "vuetify/blueprints/md3";
 
+import * as icons from "vuetify/lib/iconsets/mdi.mjs"
+
 const themeInstance:ThemeInstance = {
     themes: {
         dark: {
@@ -34,6 +36,6 @@ export default createVuetify({
         defaultTheme: 'light',
         themes: themeInstance.themes
     },
-
+    icons: icons
 
 })
