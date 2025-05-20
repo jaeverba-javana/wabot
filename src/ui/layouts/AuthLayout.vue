@@ -11,13 +11,13 @@ export default defineComponent({
     <v-card rounded="lg">
       <div class="authWrapper">
         <div class="top">
-          <RouterLink class="container elevation-24" to="/auth/login">
+          <RouterLink class="container elevation-24" replace to="/auth/login">
             <div class="login elevation-5">
               <h2>Iniciar sesi&oacute;n</h2>
             </div>
           </RouterLink>
 
-          <RouterLink class="container elevation-24" to="/auth/signup">
+          <RouterLink class="container elevation-24" replace to="/auth/signup">
             <div class="signup">
               <h2>Registrarse</h2>
             </div>

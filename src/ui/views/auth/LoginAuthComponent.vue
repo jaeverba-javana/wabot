@@ -48,7 +48,7 @@ export default defineComponent({
         isLoading.value = false
         
         if (r.status === 200) {
-          router.push('/console')
+          router.replace('/console')
         }
         
       }).catch((r: any) => {

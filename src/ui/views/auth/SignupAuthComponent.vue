@@ -3,11 +3,13 @@ import { defineComponent, ref, computed } from 'vue'
 import { useField, useForm } from 'vee-validate'
 // @ts-ignore Working
 import { axiosApi } from '@Utils/axios.ts'
+import {useRouter} from "vue-router";
 
 export default defineComponent({
   name: "SignUpAuthComponent",
   setup() {
     const isLoading = ref(false);
+    const router = useRouter()
 
     const { handleSubmit } = useForm({
       validationSchema: {
@@ -63,7 +65,11 @@ export default defineComponent({
           password: labels.password.value.value
         }
       }).then((r: any) => {
-        console.log(r.data);
+        isLoading.value = false
+
+        if (r.status === 200) {
+          router.replace('/console')
+        }
 
       }).catch((r: any) => {
         isLoading.value = false

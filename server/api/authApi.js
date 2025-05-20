@@ -1,15 +1,15 @@
 import argon from "argon2";
-import { Router } from "express";
+import {Router} from "express";
 
-import { tokenGenerate } from "./../utils/token.js"
-import { User } from './../db/mongoDb/models/index.js'
+import {tokenGenerate} from "./../utils/token.js"
+import {User} from './../db/mongoDb/models/index.js'
 
 const router = Router({
     strict: true
 })
 
 router.post('/auth/login', async (req, res, next) => {
-    User.findOne({ email: req.body.email }).exec().then((user) => {
+    User.findOne({email: req.body.email}).exec().then((user) => {
         if (!user) {
             res.status(404).end();
             return;
@@ -21,7 +21,7 @@ router.post('/auth/login', async (req, res, next) => {
                 expireDate.setDate(expireDate.getDate() + 30);
                 res.cookie(
                     "SESSION_TOKEN",
-                    tokenGenerate({ userId: user._id }, { expiresIn: '30d' }),
+                    tokenGenerate({userId: user._id}, {expiresIn: '30d'}),
                     {
                         expires: expireDate,
                     },
@@ -41,7 +41,7 @@ router.post('/auth/login', async (req, res, next) => {
 })
 
 router.post('/auth/register', async (req, res, next) => {
-    const { data } = req.body
+    const {data} = req.body
 
     const user = new User({
         email: data.email,
@@ -50,6 +50,14 @@ router.post('/auth/register', async (req, res, next) => {
 
     user.save()
         .then((value) => {
+            const expireDate = new Date()
+            expireDate.setDate(expireDate.getDate() + 30);
+            res.cookie('SESSION_TOKEN',
+                tokenGenerate({userId: value._id}, {expiresIn: '30d'}),
+                {
+                    expires: expireDate
+                }
+            )
             res.send(value)
         })
         .catch((reason) => {

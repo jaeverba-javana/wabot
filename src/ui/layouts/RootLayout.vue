@@ -21,7 +21,7 @@ export default defineComponent({
     if (token) {
       this.isAuthenticated = true
       // Redirect to dashboard if user is authenticated
-      this.$router.push('/console')
+      this.$router.replace('/console')
     }
   }
 })
