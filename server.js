@@ -113,7 +113,7 @@ app.get('*all', async (req, res) => {
   const authExcluded = ["/auth/login", "/login/signup", "/"]
 
   // console.log(req)
-  console.log(user)
+  // console.log(user)
   
   
   if ((authExcluded.includes(req.originalUrl)) && user) res.redirect("/console")

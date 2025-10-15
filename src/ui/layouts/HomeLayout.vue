@@ -11,7 +11,8 @@ export default defineComponent({
       drawer: true,
       items: [
         { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/console' },
-        { title: 'Configuración', icon: 'mdi-chat', to: '/chatbot' },
+        { title: 'Configuración', icon: 'mdi-chat', to: '/config' },
+				{title: 'Chatbot', icon: '', to:'/chatbot'}
       ],
     }
   },
@@ -55,7 +56,7 @@ export default defineComponent({
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar title="WhatsApp Chatbot" elevation="2">
+    <v-app-bar title="VANNIA" elevation="2">
       <template v-slot:prepend>
         <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       </template>

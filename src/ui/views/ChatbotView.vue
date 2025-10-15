@@ -1,253 +1,239 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">Configuración de Chatbot de WhatsApp</h1>
-      </v-col>
-    </v-row>
+	<div id="ChatbotView">
+		<svg
+				ref="svg"
+				class="canvas"
+				:style="{ cursor: isPanning ? 'grabbing' : 'default' }"
+				@mousedown="onMouseDown"
+				@mousemove="onMouseMove"
+				@mouseup="onMouseUp"
+				@mouseleave="onMouseUp"
+				@wheel="onWheel"
+		>
+			<g ref="content"
+				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
 
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-card class="mb-4">
-          <v-card-title>Información del Negocio</v-card-title>
-          <v-card-text>
-            <v-form ref="businessForm">
-              <v-text-field
-                v-model="business.name"
-                label="Nombre del Negocio"
-                required
-              ></v-text-field>
-              <v-textarea
-                v-model="business.description"
-                label="Descripción del Negocio"
-                hint="Describe brevemente tu negocio"
-                rows="3"
-              ></v-textarea>
-              <v-text-field
-                v-model="business.phone"
-                label="Número de WhatsApp"
-                hint="Formato: +52 1234567890"
-                required
-              ></v-text-field>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
+			</g>
+		</svg>
 
-      <v-col cols="12" md="6">
-        <v-card class="mb-4">
-          <v-card-title>Configuración del Chatbot</v-card-title>
-          <v-card-text>
-            <v-form ref="chatbotForm">
-              <v-text-field
-                v-model="chatbot.welcomeMessage"
-                label="Mensaje de Bienvenida"
-                hint="Mensaje que recibirán tus clientes al iniciar la conversación"
-                required
-              ></v-text-field>
-              <v-select
-                v-model="chatbot.language"
-                :items="languages"
-                label="Idioma Principal"
-                required
-              ></v-select>
-            </v-form>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+		<div class="details"></div>
 
-    <v-row>
-      <v-col cols="12">
-        <v-card>
-          <v-card-title class="d-flex justify-space-between align-center">
-            <span>Respuestas Predefinidas</span>
-            <v-btn color="primary" @click="addResponse">
-              <v-icon left>mdi-plus</v-icon> Agregar Respuesta
-            </v-btn>
-          </v-card-title>
-          <v-card-text>
-            <v-expansion-panels v-model="openPanel">
-              <v-expansion-panel
-                v-for="(response, index) in predefinedResponses"
-                :key="index"
-              >
-                <v-expansion-panel-title>
-                  {{ response.keyword || 'Nueva Respuesta' }}
-                </v-expansion-panel-title>
-                <v-expansion-panel-text>
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="response.keyword"
-                        label="Palabra Clave"
-                        hint="Palabra o frase que activará esta respuesta"
-                        required
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-select
-                        v-model="response.type"
-                        :items="responseTypes"
-                        label="Tipo de Respuesta"
-                        required
-                      ></v-select>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-textarea
-                        v-model="response.content"
-                        label="Contenido de la Respuesta"
-                        hint="Mensaje que se enviará cuando se detecte la palabra clave"
-                        rows="3"
-                        required
-                      ></v-textarea>
-                    </v-col>
-                    <v-col cols="12" class="d-flex justify-end">
-                      <v-btn
-                        color="error"
-                        variant="text"
-                        @click="removeResponse(index)"
-                      >
-                        <v-icon left>mdi-delete</v-icon> Eliminar
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                </v-expansion-panel-text>
-              </v-expansion-panel>
-            </v-expansion-panels>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <v-row class="mt-4">
-      <v-col cols="12" class="d-flex justify-end">
-        <v-btn
-          color="primary"
-          size="large"
-          @click="saveChatbot"
-          :loading="loading"
-        >
-          Guardar Configuración
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-container>
+		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
+				 viewBox="0 0 640 640"><path
+				fill="currentColor" d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/></svg>
+	</div>
 </template>
 
-<script>
+<script lang="ts">
 export default {
-  name: 'ChatbotView',
-  data() {
-    return {
-      loading: false,
-      openPanel: null,
-      business: {
-        name: '',
-        description: '',
-        phone: ''
-      },
-      chatbot: {
-        welcomeMessage: '¡Hola! Gracias por contactarnos. ¿En qué podemos ayudarte?',
-        language: 'es'
-      },
-      languages: [
-        { text: 'Español', value: 'es' },
-        { text: 'Inglés', value: 'en' }
-      ],
-      responseTypes: [
-        { text: 'Texto', value: 'text' },
-        { text: 'Imagen', value: 'image' },
-        { text: 'Opciones', value: 'options' }
-      ],
-      predefinedResponses: [
-        {
-          keyword: 'horario',
-          type: 'text',
-          content: 'Nuestro horario de atención es de lunes a viernes de 9:00 AM a 6:00 PM.'
-        },
-        {
-          keyword: 'ubicación',
-          type: 'text',
-          content: 'Estamos ubicados en Av. Principal #123, Colonia Centro.'
-        }
-      ]
-    }
-  },
-  mounted() {
-    this.fetchChatbotConfig();
-  },
-  methods: {
-    addResponse() {
-      this.predefinedResponses.push({
-        keyword: '',
-        type: 'text',
-        content: ''
-      });
-      this.openPanel = this.predefinedResponses.length - 1;
-    },
-    removeResponse(index) {
-      this.predefinedResponses.splice(index, 1);
-    },
-    async fetchChatbotConfig() {
-      try {
-        const response = await fetch('/api/chatbot');
+	name: 'ChatbotView',
+	data() {
+		return {
+			isPanning: false as boolean,
+			offsetX: 0 as number,
+			offsetY: 0 as number,
+			panStartX: 0 as number,
+			panStartY: 0 as number,
+			startOffsetX: 0 as number,
+			startOffsetY: 0 as number,
+			scale: 1 as number,
+			minScale: 0.2 as number,
+			maxScale: 3 as number,
+		}
+	},
+	methods: {
+		onMouseDown(e: MouseEvent) {
+			// Middle mouse button initiates panning
+			if (e.button === 1) {
+				e.preventDefault();
+				this.isPanning = true;
+				this.panStartX = e.clientX;
+				this.panStartY = e.clientY;
+				this.startOffsetX = this.offsetX;
+				this.startOffsetY = this.offsetY;
+			}
+		},
+		onMouseMove(e: MouseEvent) {
 
-        if (response.status === 404) {
-          // No configuration found, use defaults
-          return;
-        }
+			// Obtener las coordenadas del mouse en el espacio SVG
+			// this.mouseX = svgCoords.x;
+			// this.mouseY = svgCoords.y;
 
-        if (!response.ok) {
-          throw new Error('Error al obtener la configuración');
-        }
+			// console.log(svgElement)
+			// console.log(svgCoords)
 
-        const data = await response.json();
+			if (!this.isPanning) return;
+			e.preventDefault();
+			const dx = e.clientX - this.panStartX;
+			const dy = e.clientY - this.panStartY;
+			this.offsetX = this.startOffsetX + dx;
+			this.offsetY = this.startOffsetY + dy;
+			this.clampOffsets();
+		},
+		onMouseUp(e: MouseEvent) {
+			if (this.isPanning) {
+				e.preventDefault();
+				this.isPanning = false;
+			}
+		},
+		onWheel(e: WheelEvent) {
+			// Zoom only when Ctrl key is pressed
+			if (!e.ctrlKey) return;
+			e.preventDefault();
 
-        // Update the form with the retrieved data
-        this.business = data.business;
-        this.chatbot = data.chatbot;
-        this.predefinedResponses = data.predefinedResponses;
-      } catch (error) {
-        console.error('Error fetching chatbot config:', error);
-        // Could show an error message to the user here
-      }
-    },
-    async saveChatbot() {
-      this.loading = true;
 
-      try {
-        const response = await fetch('/api/chatbot', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            business: this.business,
-            chatbot: this.chatbot,
-            predefinedResponses: this.predefinedResponses
-          })
-        });
+			const svgElement = (this.$refs.svg as SVGSVGElement | undefined);
+			const rect = svgElement.getBoundingClientRect();
 
-        if (!response.ok) {
-          throw new Error('Error al guardar la configuración');
-        }
+			const svgCoords = this.screenToSVGManual(e.clientX, e.clientY, svgElement);
+			const mouseX = e.clientX - rect.left;
+			const mouseY = e.clientY - rect.top;
 
-        // Show success message
-        alert('Configuración guardada correctamente');
-      } catch (error) {
-        console.error('Error saving chatbot config:', error);
-        alert('Error al guardar la configuración: ' + error.message);
-      } finally {
-        this.loading = false;
-      }
-    }
-  }
+			// console.log(svgCoords)
+			// console.log([mouseX, mouseY])
+			// console.log([this.offsetX, this.offsetY])
+
+			const zoomIntensity = 0.0015; // tune sensitivity
+			// deltaY > 0 => zoom out, deltaY < 0 => zoom in
+			const oldScale = this.scale;
+
+			const newScale = this.scale * (1 - e.deltaY * zoomIntensity);
+			this.scale = Math.min(this.maxScale, Math.max(this.minScale, newScale));
+
+			// Ajustar el offset para hacer zoom hacia el mouse
+			const scaleDiff = this.scale / oldScale;
+			this.offsetX = mouseX - (mouseX - this.offsetX) * scaleDiff;
+			this.offsetY = mouseY - (mouseY - this.offsetY) * scaleDiff;
+			this.clampOffsets();
+		},
+
+		// Método alternativo sin usar getScreenCTM
+		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
+			const rect = svgElement.getBoundingClientRect();
+			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
+			const x = clientX - rect.left;
+			const y = clientY - rect.top;
+			// Aplicar la transformación inversa (restar offset y dividir por escala)
+			const svgX = (x - this.offsetX) / this.scale;
+			const svgY = (y - this.offsetY) / this.scale;
+			return {x: svgX, y: svgY};
+		},
+
+
+		// Método para convertir coordenadas de pantalla a coordenadas SVG
+		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
+			const CTM = svgElement.getScreenCTM();
+			if (CTM) {
+				const point = svgElement.createSVGPoint();
+				point.x = screenX;
+				point.y = screenY;
+				const svgPoint = point.matrixTransform(CTM.inverse());
+				return {x: svgPoint.x, y: svgPoint.y};
+			}
+			return {x: 0, y: 0};
+		},
+
+		clampOffsets() {
+			const svg = (this.$refs.svg as SVGSVGElement | undefined);
+			const content = (this.$refs.content as SVGGElement | undefined);
+
+			if (!svg || !content) return;
+			const rect = svg.getBoundingClientRect();
+			const viewWidth = rect.width;
+			const viewHeight = rect.height;
+			const bbox = content.getBBox();
+			// transformed bbox on screen: screen = scale*local + offset
+			const scaledW = this.scale * bbox.width;
+			const scaledH = this.scale * bbox.height;
+			const minOffsetX = (viewWidth - this.scale * (bbox.x + bbox.width)) +
+				this.scale - viewWidth + 50;
+			const maxOffsetX = (-this.scale * bbox.x) + this.scale + viewWidth - 50;
+			const minOffsetY = (viewHeight - this.scale * (bbox.y + bbox.height)) +
+				this.scale - viewHeight + 50;
+			const maxOffsetY = (-this.scale * bbox.y) + this.scale + viewHeight - 50;
+
+			// If content smaller than viewport, center it on that axis
+			// if (scaledW <= viewWidth) {
+			// 	this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
+			// } else {
+			this.offsetX = Math.min(Math.max(this.offsetX, minOffsetX),
+				maxOffsetX);
+			// }
+
+			// if (scaledH <= viewHeight) {
+			// 	this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
+			// } else {
+			this.offsetY = Math.min(Math.max(this.offsetY, minOffsetY), maxOffsetY);
+			// }
+		},
+
+		center() {
+			const svg = (this.$refs.svg as SVGSVGElement | undefined);
+			const content = (this.$refs.content as SVGGElement | undefined);
+
+			if (!svg || !content) return;
+			const rect = svg.getBoundingClientRect();
+
+			const viewWidth = rect.width;
+			const viewHeight = rect.height;
+
+
+			const bbox = content.getBBox();
+
+			const scaledW = this.scale * bbox.width;
+			const scaledH = this.scale * bbox.height;
+
+			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
+			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
+
+		}
+	},
+	mounted() {
+		this.center()
+	}
 }
 </script>
 
 <style scoped>
-.v-card {
-  border-radius: 8px;
+#ChatbotView {
+	width: 100%;
+	height: 100%;
+	position: relative;
+
+	display: flex;
+
+	--details-width: 300px;
+}
+
+.canvas {
+	//width: 100%;
+	//height: 100%;
+	//z-index: -1;
+	flex: 1;
+	overflow: visible;
+}
+
+.details {
+	z-index: 3;
+	width: var(--details-width);
+	box-shadow: var(--elevation3);
+	background-color: white;
+}
+
+.fab {
+	height: 49px;
+	background-color: rgb(var(--v-theme-primaryContainer));
+	color: rgb(var(--v-theme-onPrimaryContainer));
+	box-shadow: var(--elevation2);
+	border-radius: 25%;
+	position: absolute;
+	right: calc(var(--details-width) + 16px);
+	bottom: 16px;
+	cursor: pointer;
+	transition: var(--elevation-transition);
+
+	&:hover {
+		box-shadow: var(--elevation3);
+	}
 }
 </style>

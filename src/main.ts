@@ -5,6 +5,7 @@ import 'vuetify/styles/main.css'
 
 import vuetify from "./plugins/vuetify.ts";
 import router from "./plugins/router.ts";
+import {createPinia} from "pinia";
 
 // SSR requires a fresh app instance per request, therefore we export a function
 // that creates a fresh app instance. If using Vuex, we'd also be creating a
@@ -16,6 +17,7 @@ import router from "./plugins/router.ts";
 
 
 const app = createApp(App)
+    .use(createPinia())
     .use(router)
     .use(vuetify)
 

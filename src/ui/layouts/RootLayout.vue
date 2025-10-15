@@ -9,9 +9,12 @@ export default defineComponent({
       isAuthenticated: false,
       // Features list for the landing page
       features: [
-        { icon: 'mdi-chat', title: 'Chat bot', description: 'Crea respuestas automáticas para las tareas repetitivas de tu empresa' },
-        { icon: 'mdi-account-group', title: 'Soporte 24/7', description: 'Nuestro equipo está disponible todo el día para ayudarte con cualquier consulta.' },
-        { icon: 'mdi-cellphone-link', title: 'Multiplataforma', description: 'Accede desde cualquier dispositivo, en cualquier momento y lugar.' }
+        { icon: '/img/svg/smart_toy.svg', title: 'Chat bot', description:
+						'Crea respuestas automáticas para las tareas repetitivas de tu empresa' },
+        { icon: '/img/svg/support_agent.svg', title: 'Soporte 24/7', description:
+						'Nuestro equipo está disponible todo el día para ayudarte con cualquier consulta.' },
+        { icon: '/img/svg/devices.svg', title: 'Multiplataforma', description:
+						'Accede desde cualquier dispositivo, en cualquier momento y lugar.' }
       ]
     }
   },
@@ -30,12 +33,20 @@ export default defineComponent({
 <template>
   <v-app>
     <!-- Header/Navigation -->
-    <v-app-bar color="transparent" elevation="0" app>
+    <v-app-bar color="transparent" elevation="3" app>
       <v-container class="py-0 fill-height">
-        <v-avatar class="me-4" color="primary" size="32">
-          <v-icon color="white">mdi-chat</v-icon>
-        </v-avatar>
-        <v-app-bar-title class="text-h6 font-weight-bold">WhatsApp Chatbot</v-app-bar-title>
+<!--        <v-avatar class="me-4" color="primary" size="32">-->
+<!--          <v-icon color="white">mdi-chat</v-icon>-->
+<!--        </v-avatar>-->
+        <v-app-bar-title class="text-h6 font-weight-bold">
+					<div style="display: flex; flex-direction: column">
+						<div>VANNIA</div>
+						<span style="font-size: 11px; margin: 0; margin-top: -10px;
+						font-weight: 400">Crea,
+							Conecta,
+							Conversa</span>
+					</div>
+				</v-app-bar-title>
         <v-spacer></v-spacer>
         <v-btn to="/auth/login" color="primary" variant="text" class="me-2">Iniciar Sesión</v-btn>
         <v-btn to="/auth/signup" color="primary" variant="outlined">Registrarse</v-btn>
@@ -43,8 +54,61 @@ export default defineComponent({
     </v-app-bar>
 
     <v-main>
+			<section>
+				<v-carousel
+						:show-arrows="false"
+						hide-delimiters
+				>
+					<v-carousel-item
+							cover
+					>
+<!--						<div style="aspect-ratio: 3/5">-->
+							<v-container class="wrapper">
+								<v-row align="center" justify="center" class="py-16">
+									<v-col cols="12" md="6" class="text-center text-md-left">
+										<h1 class="text-h2 font-weight-bold mb-4">Impulsa tu
+											negocio con Vannia</h1>
+										<p class="text-h6 mb-8">La solución perfecta para automatizar tus conversaciones de WhatsApp y mejorar la experiencia de tus clientes.</p>
+										<v-btn to="/auth/signup" color="primary" size="x-large" class="me-4">Comenzar Ahora</v-btn>
+										<v-btn to="/auth/login" color="white" size="x-large"
+													 variant="outlined">Iniciar Sesión</v-btn>
+									</v-col>
+									<v-col cols="12" md="6" class="d-none d-md-flex justify-center">
+										<v-img src="https://cdn.pixabay.com/photo/2020/05/18/16/17/social-media-5187243_960_720.png" max-width="500" contain></v-img>
+									</v-col>
+								</v-row>
+							</v-container>
+<!--						</div>-->
+					</v-carousel-item>
+
+					<v-carousel-item>
+						<div style="aspect-ratio: 3/5">
+							<v-container class="wrapper">
+								<v-row align="center" justify="center" class="py-16">
+									<v-col cols="12" md="6" class="text-center text-md-left">
+										<h1 class="text-h2 font-weight-bold mb-4">Bienvenido a Nuestro Chatbot Inteligente</h1>
+										<p class="text-h6 mb-8">La solución perfecta para automatizar tus conversaciones de WhatsApp y mejorar la experiencia de tus clientes.</p>
+										<v-btn to="/auth/signup" color="primary" size="x-large" class="me-4">Comenzar Ahora</v-btn>
+										<v-btn to="/auth/login" color="secondary" size="x-large" variant="outlined">Iniciar Sesión</v-btn>
+									</v-col>
+									<v-col cols="12" md="6" class="d-none d-md-flex justify-center">
+										<v-img src="https://cdn.pixabay.com/photo/2020/05/18/16/17/social-media-5187243_960_720.png" max-width="500" contain></v-img>
+									</v-col>
+								</v-row>
+							</v-container>
+						</div>
+					</v-carousel-item>
+
+					<v-carousel-item>
+						<div style="aspect-ratio: 3/5">
+							<h1>header 3</h1>
+						</div>
+					</v-carousel-item>
+				</v-carousel>
+			</section>
+
       <!-- Hero Section -->
-      <section class="hero-section">
+<!--      <section class="hero-section">
         <v-container>
           <v-row align="center" justify="center" class="py-16">
             <v-col cols="12" md="6" class="text-center text-md-left">
@@ -58,7 +122,7 @@ export default defineComponent({
             </v-col>
           </v-row>
         </v-container>
-      </section>
+      </section>-->
 
       <!-- Features Section -->
       <section class="features-section py-16 bg-grey-lighten-4">
@@ -66,15 +130,18 @@ export default defineComponent({
           <h2 class="text-h3 text-center font-weight-bold mb-12">Nuestras Características</h2>
           <v-row>
             <v-col v-for="(feature, index) in features" :key="index" cols="12" md="4">
-              <v-card class="mx-auto" height="100%" elevation="0">
+              <v-card class="mx-auto" height="100%" elevation="3">
                 <v-card-item>
-                  <v-avatar color="primary" size="64" class="mb-4">
-                    <v-icon size="36" color="white">{{ feature.icon }}</v-icon>
-                  </v-avatar>
-                  <v-card-title class="text-h5 font-weight-bold">{{ feature.title }}</v-card-title>
-                  <v-card-text>
-                    <p class="text-body-1">{{ feature.description }}</p>
-                  </v-card-text>
+									<div style="display: flex; flex-direction: column; align-items: center;" >
+										<v-avatar color="primary" size="64" class="mb-4">
+											<v-img :src="feature.icon"></v-img>
+										</v-avatar>
+										<v-card-title class="text-h5 font-weight-bold">{{ feature.title }}</v-card-title>
+<!--										<v-card-text>-->
+											<p class="text-body-1">{{ feature.description }}</p>
+<!--										</v-card-text>-->
+									</div>
+
                 </v-card-item>
               </v-card>
             </v-col>
@@ -83,37 +150,29 @@ export default defineComponent({
       </section>
 
       <!-- CTA Section -->
-      <section class="cta-section py-16">
+      <section class="cta-section">
         <v-container>
           <v-row justify="center">
             <v-col cols="12" md="8" lg="6">
-              <v-card class="text-center pa-8" elevation="10">
-                <v-card-title class="text-h4 mb-4">¿Listo para comenzar?</v-card-title>
+              <v-card class="text-center pa-8" elevation="0" color="transparent"
+											style="color: white">
+                <h2 style="font-weight: 600; color: white; font-size: 36px">¿Listo
+									para transformar tu comunicaci&oacute;n?
+								</h2>
                 <v-card-text>
-                  <p class="text-body-1 mb-6">
+                  <p class="text-body-1 mb-6" style="color: white">
                     Únete a miles de usuarios que ya están mejorando su comunicación con nuestro chatbot inteligente.
                   </p>
                   <v-row justify="center" class="mt-6">
                     <v-col cols="12" sm="6" class="px-2">
                       <v-btn 
                         block 
-                        color="primary" 
-                        size="large" 
-                        to="/auth/login"
-                        class="mb-3"
-                      >
-                        Iniciar Sesión
-                      </v-btn>
-                    </v-col>
-                    <v-col cols="12" sm="6" class="px-2">
-                      <v-btn 
-                        block 
-                        color="secondary" 
+                        color="white"
                         size="large" 
                         to="/auth/signup"
                         class="mb-3"
                       >
-                        Registrarse
+                        Empezar
                       </v-btn>
                     </v-col>
                   </v-row>
@@ -126,11 +185,11 @@ export default defineComponent({
 
       <!-- Footer -->
       <v-footer class="bg-primary text-center d-flex flex-column">
-        <div>
-          <v-btn v-for="icon in ['mdi-facebook', 'mdi-twitter', 'mdi-linkedin', 'mdi-instagram']" :key="icon" class="mx-2" icon variant="text" color="white">
-            <v-icon>{{ icon }}</v-icon>
-          </v-btn>
-        </div>
+<!--        <div>-->
+<!--          <v-btn v-for="icon in ['mdi-facebook', 'mdi-twitter', 'mdi-linkedin', 'mdi-instagram']" :key="icon" class="mx-2" icon variant="text" color="white">-->
+<!--            <v-icon>{{ icon }}</v-icon>-->
+<!--          </v-btn>-->
+<!--        </div>-->
         <div class="white--text pt-4 pb-2">
           © {{ new Date().getFullYear() }} — <strong>WhatsApp Chatbot</strong>
         </div>
@@ -149,6 +208,11 @@ export default defineComponent({
   color: white;
   position: relative;
   overflow: hidden;
+}
+
+.v-carousel-item {
+	background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+	color: white;
 }
 
 .hero-section::before {
@@ -170,7 +234,7 @@ export default defineComponent({
 
 .cta-section {
   background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
-  padding: 80px 0;
+  //padding: 80px 0;
 }
 
 .cta-section .v-card {

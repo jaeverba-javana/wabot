@@ -28,11 +28,11 @@ export const notAuthenticated = async (req, res, next) => {
 export const isAuthenticated = async (req) => {
     const userToken = req.cookies["SESSION_TOKEN"];
 
-    console.log('sessionToken:', userToken)
+    // console.log('sessionToken:', userToken)
 
     if (userToken) {
         const decoded = tokenDecode(userToken);
-        console.log('decoded:', decoded)
+        // console.log('decoded:', decoded)
 
         if (decoded) {
             return await User.findById(decoded.userId)

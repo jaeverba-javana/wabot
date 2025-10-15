@@ -37,6 +37,9 @@ const userSchema = new Schema({
     //   'username': {$exists: true}
     // }
   },
+  phoneNumber: {
+    type: Number
+  }
   /* containerName: {
     required: false,
     type: String,
@@ -59,6 +62,13 @@ userSchema.index({username: 1}, {
   unique: true,
   partialFilterExpression: {
     "username": {$exists: true}
+  }
+})
+
+userSchema.index({phoneNumber: 1}, {
+  unique: true,
+  partialFilterExpression: {
+    "phoneNumber": {$exists: true}
   }
 })
 
