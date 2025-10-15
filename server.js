@@ -8,7 +8,7 @@ import { isAuthenticated } from './server/api/auth.js';
 
 // Cached production assets
 const templateHtml = isProduction
-  ? await fs.readFile('./dist/index.html', 'utf-8')
+  ? await fs.readFile('./dist/client/index.html', 'utf-8')
   : ''
 
 // Create http server
@@ -29,7 +29,7 @@ if (!isProduction) {
   const compression = (await import('compression')).default
   const sirv = (await import('sirv')).default
   app.use(compression())
-  app.use(base, sirv('./dist', { extensions: [] }))
+  app.use(base, sirv('./dist/client', { extensions: [] }))
 }
 
 app.use(express.json())

@@ -36,7 +36,7 @@ export const isAuthenticated = async (req) => {
 
         if (decoded) {
             return await User.findById(decoded.userId)
-                .catch((e) => console.log(r))
+                .catch((e) => console.log(e))
         }
     }
 }
