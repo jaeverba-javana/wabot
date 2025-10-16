@@ -7,7 +7,18 @@ export const routes: RouteRecordRaw[] = [
 		path: '/',
 		name: 'RootLayout',
 		component: RootLayout,
-		meta: {requiresGuest: true}
+		meta: {requiresGuest: true},
+		children: [
+			{
+				path: '',
+				name: 'Landing',
+				component: () => import('@/ui/views/root/MainRootView.vue')
+			}, {
+			path: 'politica-privacidad',
+				name: 'PolicyPrivacy',
+				component: () => import('@/ui/views/root/PrivacyPolicyRootView.vue')
+			}
+		]
 	},
 	{
 		path: '/auth',
