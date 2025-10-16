@@ -1,10 +1,11 @@
 import {Router} from "express";
+import {authenticate} from "./auth.js";
 
 const router = Router({
     strict: true
 });
 
-router.get("/", (req, res) => {
+router.get("/", authenticate, (req, res) => {
     let user
 
     if (req.user) {

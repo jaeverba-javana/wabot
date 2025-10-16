@@ -6,18 +6,17 @@ const router = Router({
     strict: true
 });
 
-// Middleware to check if user is authenticated
-router.use(async (req, res, next) => {
+const requireAuth = async (req, res, next) => {
     const user = await isAuthenticated(req);
     if (!user) {
-        return res.status(401).json({ message: "No autorizado" });
+        return res.status(401).json({ message: "No autorizado" , from:'chatbotApi'});
     }
     req.user = user;
     next();
-});
+}
 
 // Get chatbot configuration for the current user
-router.get('/chatbot', async (req, res) => {
+router.get('/chatbot', requireAuth, async (req, res) => {
     try {
         const chatbot = await Chatbot.findOne({ userId: req.user.userId });
         if (!chatbot) {
@@ -31,7 +30,7 @@ router.get('/chatbot', async (req, res) => {
 });
 
 // Create or update chatbot configuration
-router.post('/chatbot', async (req, res) => {
+router.post('/chatbot', requireAuth, async (req, res) => {
     try {
         const { business, chatbot, predefinedResponses } = req.body;
 
@@ -68,7 +67,7 @@ router.post('/chatbot', async (req, res) => {
 });
 
 // Delete chatbot configuration
-router.delete('/chatbot', async (req, res) => {
+router.delete('/chatbot', requireAuth, async (req, res) => {
     try {
         const result = await Chatbot.deleteOne({ userId: req.user.userId });
         if (result.deletedCount === 0) {

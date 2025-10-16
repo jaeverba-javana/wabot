@@ -8,7 +8,7 @@
     "build": "npm run build:client",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
-    "preview": "cross-env NODE_ENV=production node index",
+    "preview": "cross-env NODE_ENV=production nodemon index",
     "check": "vue-tsc",
     "server": "vite build --outDir dist && npm run preview",
     "serve": "node index"

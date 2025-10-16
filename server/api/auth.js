@@ -14,7 +14,7 @@ export const authenticate = async (req, res, next) => {
     }
 }
 
-export const notAuthenticated = async (req, res, next) => {
+export const isNotAuthenticated = async (req, res, next) => {
     const user = await isAuthenticated(req)
 
     if (user) {
