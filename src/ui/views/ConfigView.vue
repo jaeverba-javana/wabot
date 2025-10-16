@@ -30,11 +30,13 @@
               />
               <v-text-field
                   :disabled="appStore.user.phoneNumber && appStore.user.phoneConfirmed"
-                  type="phone"
-                  v-model="fields.business.phone.value.value"
-                  :error-messages="fields.business.phone.errorMessage.value"
-                  label="Número de WhatsApp"
-                  :hint="(fields.business.phone.errorMessage.value)? 'No use espacios' : fields.business.phone.value.value? 'Todo bien' : 'No use espacios'"
+                  type="number"
+                  v-model="fields.business.phoneId.value.value"
+                  :error-messages="fields.business.phoneId.errorMessage.value"
+                  label="Identificador de número de teléfono"
+                  :hint="(fields.business.phoneId.errorMessage.value)?
+                  'No use espacios' : fields.business.phoneId.value.value?
+                  'Todo bien' : 'No use espacios'"
                   required
               ></v-text-field>
 
@@ -96,7 +98,7 @@
       </v-col>
     </v-row>
 
-    <v-row>
+<!--    <v-row>
       <v-col cols="12">
         <v-card>
           <v-card-title class="d-flex justify-space-between align-center">
@@ -159,7 +161,7 @@
           </v-card-text>
         </v-card>
       </v-col>
-    </v-row>
+    </v-row>-->
   </v-container>
 </template>
 
@@ -167,6 +169,8 @@
 import {useField} from "vee-validate";
 import {useAppStore} from "@/stores/app.store.js";
 import {watch} from 'vue'
+import {axiosApi} from "../../utils/axios.ts";
+import {useToastStore} from '@/stores/toast.store.ts'
 
 export default {
   name: 'ChatbotView',
@@ -175,31 +179,6 @@ export default {
       isOtpActive: false,
       loading: false,
       openPanel: null,
-      chatbot: {
-        welcomeMessage: '¡Hola! Gracias por contactarnos. ¿En qué podemos ayudarte?',
-        language: 'es'
-      },
-      languages: [
-        {text: 'Español', value: 'es'},
-        {text: 'Inglés', value: 'en'}
-      ],
-      responseTypes: [
-        {text: 'Texto', value: 'text'},
-        {text: 'Imagen', value: 'image'},
-        {text: 'Opciones', value: 'options'}
-      ],
-      predefinedResponses: [
-        {
-          keyword: 'horario',
-          type: 'text',
-          content: 'Nuestro horario de atención es de lunes a viernes de 9:00 AM a 6:00 PM.'
-        },
-        {
-          keyword: 'ubicación',
-          type: 'text',
-          content: 'Estamos ubicados en Av. Principal #123, Colonia Centro.'
-        }
-      ]
     }
   },
   setup() {
@@ -208,10 +187,10 @@ export default {
 
     const business = {
       email: useField('businessEmail'),
-      phone: useField("businessPhone", (value: string) => {
-        if (!value.length) return "El campo no puede quedar vacío"
+      phoneId: useField("businessPhone", (value: string) => {
+        if (!value || !value.length) return "El campo no puede quedar vacío"
         if (/[^\d]/.test(value)) return "Por favor solo incluya números"
-        if (value.length !== 10) return "El número debe tener 10 caracteres"
+        if (value.length !== 15) return "El número debe tener 15 caracteres"
 
         return true
       }),
@@ -222,8 +201,10 @@ export default {
       console.log("Ha cambiado")
 
       business.email.value.value = appStore.user.email
+			business.phoneId.value.value = appStore.user.phoneId
     })
     business.email.value.value = appStore.user.email
+		business.phoneId.value.value = appStore.user.phoneId
 
     return {
       fields: {business},
@@ -231,7 +212,7 @@ export default {
     }
   },
   mounted() {
-    this.fetchChatbotConfig();
+    // this.fetchChatbotConfig();
   },
   methods: {
     addResponse() {
@@ -272,6 +253,20 @@ export default {
     saveInfo() {
       this.loading = true;
 
+			axiosApi.put('/user', {
+				phoneId: this.fields.business.phoneId.value.value,
+			}).then((r: any) => {
+				console.log(r)
+				this.loading = false;
+				const toast = useToastStore();
+				toast.show('La información se ha guardado correctamente', 'success')
+				// this.isOtpActive = true;
+			}).catch((err: any) => {
+        console.error(err)
+        this.loading = false;
+        const toast = useToastStore();
+        toast.show('Ocurrió un error al guardar la información', 'error')
+      })
     }
   }
 }

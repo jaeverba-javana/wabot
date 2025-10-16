@@ -3,6 +3,7 @@
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import HelloWorld from './ui/components/HelloWorld.vue'
 import {useAppStore} from "@/stores/app.store.ts";
+import ToastContainer from '@/ui/components/ToastContainer.vue'
 
 const appStore = useAppStore()
 </script>
@@ -10,8 +11,8 @@ const appStore = useAppStore()
 <template>
 <!--  <v-app>-->
     <v-layout>
-
-    <router-view/>
+      <router-view/>
+      <ToastContainer />
     </v-layout>
 <!--  </v-app>-->
 </template>
