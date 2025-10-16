@@ -3,11 +3,17 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
   name: "RootLayout",
-  mounted() {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token')
-    if (token) {
-      this.isAuthenticated = true
+	data() {
+		return {
+			isAuthenticated: false
+		}
+	},
+	mounted() {
+		// Check if user is authenticated
+		const token = localStorage.getItem('token')
+
+		if (token && this.$route.path === '/') {
+			this.isAuthenticated = true
       // Redirect to dashboard if user is authenticated
       this.$router.replace('/console')
     }

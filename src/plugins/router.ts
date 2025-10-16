@@ -17,6 +17,10 @@ export const routes: RouteRecordRaw[] = [
 			path: 'politica-privacidad',
 				name: 'PolicyPrivacy',
 				component: () => import('@/ui/views/root/PrivacyPolicyRootView.vue')
+			}, {
+			path: 'terminos-y-condiciones',
+				name: 'TermsOfService',
+				component: () => import('@/ui/views/root/TermsOfServiceRootView.vue')
 			}
 		]
 	},

@@ -110,7 +110,7 @@ app.get('*all', async (req, res) => {
 
   const user = await isAuthenticated(req)
 
-  const authExcluded = ["/auth/login", "/login/signup", "/", "/politica-privacidad"]
+  const authExcluded = ["/auth/login", "/login/signup", "/", "/politica-privacidad", "/terminos-y-condiciones"]
 
   // console.log(req)
   // console.log(user)
