@@ -43,14 +43,14 @@ const reStructQuery = (req, res, next) => {
     next()
 }
 
-router.get('/wab/webhook', reStructQuery, requireAuth, (req, res) => {
+router.get('/webhook', reStructQuery, requireAuth, (req, res) => {
     console.log(req.query)
     console.log(req.body)
 
     res.send(req.queries.hub.challenge)
 })
 
-router.post('/wab/webhook', (req, res) => {
+router.post('/webhook', (req, res) => {
 
     console.log(req.body.entry[0].changes[0].value)
 

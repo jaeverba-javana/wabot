@@ -8,7 +8,7 @@ const router = Router()
 
 router.use('/api', authApi)
 router.use('/api', chatbotApi)
-router.use('/api', whatsappBusiness)
+router.use('/api/wab', whatsappBusiness)
 router.use("/api/user", userApi)
 
 export default router
