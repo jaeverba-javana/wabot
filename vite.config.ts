@@ -16,5 +16,8 @@ export default defineConfig({
       '@Fragments': fileURLToPath(new URL('./src/fragments', import.meta.url)),
       '@Layouts': fileURLToPath(new URL('./src/layouts', import.meta.url)),
     }
-  }
+  },
+	server: {
+		allowedHosts: ["ipjutn-ip-186-169-202-190.tunnelmole.net"]
+	}
 })

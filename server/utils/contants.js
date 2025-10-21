@@ -1,6 +1,6 @@
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-export const PORT = process.env.PORT || 5174
+export const PORT = process.env.PORT || IS_PRODUCTION? 5174 : 5173;
 export const BASE = process.env.BASE || '/'
 
 export const CONSOLE_COLORS = {

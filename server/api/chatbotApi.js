@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { isAuthenticated } from '../api/auth.js';
 import { Chatbot } from './../db/mongoDb/models/index.js';
+import { chatBotController } from './../controller/index.js';
+import {wabaApi} from "../utils/axios.js";
 
 const router = Router({
     strict: true
@@ -15,8 +17,31 @@ const requireAuth = async (req, res, next) => {
     next();
 }
 
+router.patch('/', async (req, res) => {
+	const chatbot = await chatBotController.get(req.user._id)
+	console.log(chatbot)
+	chatbot.phoneId = req.body.phoneId
+	chatbot.token = req.body.token
+
+	await chatBotController.update(chatbot)
+
+	const {data: wabaResponse} = await wabaApi(
+			chatbot.phoneId,
+			chatbot.token
+	).get("")
+
+	req.user.phone = wabaResponse.display_phone_number
+	const user = await req.user.save()
+
+	// console.log(wabaResponse)
+	// console.log(user)
+	// console.log(req.user)
+
+	res.send({message: "Phone ID updated successfully", data: {chatbot, user}})
+})
+
 // Get chatbot configuration for the current user
-router.get('/chatbot', requireAuth, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const chatbot = await Chatbot.findOne({ userId: req.user.userId });
         if (!chatbot) {
@@ -30,7 +55,7 @@ router.get('/chatbot', requireAuth, async (req, res) => {
 });
 
 // Create or update chatbot configuration
-router.post('/chatbot', requireAuth, async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { business, chatbot, predefinedResponses } = req.body;
 
@@ -67,7 +92,7 @@ router.post('/chatbot', requireAuth, async (req, res) => {
 });
 
 // Delete chatbot configuration
-router.delete('/chatbot', requireAuth, async (req, res) => {
+router.delete('/', async (req, res) => {
     try {
         const result = await Chatbot.deleteOne({ userId: req.user.userId });
         if (result.deletedCount === 0) {
@@ -80,4 +105,4 @@ router.delete('/chatbot', requireAuth, async (req, res) => {
     }
 });
 
-export default router;
+export default Router().use('/chatbot', requireAuth, router);

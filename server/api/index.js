@@ -1,14 +1,11 @@
-import { Router } from "express";
-import authApi from './authApi.js';
-import chatbotApi from './chatbotApi.js';
-import userApi from "./userApi.js";
-import whatsappBusiness from "./whatsappBusiness.js";
+import {Router} from "express";
 
-const router = Router()
-
-router.use('/api', authApi)
-router.use('/api', chatbotApi)
-router.use('/api/wab', whatsappBusiness)
-router.use("/api/user", userApi)
-
-export default router
+export default Router().use('/api',
+		(await import('./authApi.js')).default,
+		(await import('./chatbotApi.js')).default,
+		(await import('./whatsappBusiness.js')).default,
+		(await import('./fetchingApi.js')).default,
+		(await import('./userApi.js')).default,
+		(await import('./flowNode.api.js')).default,
+		(req, res) => res.status(404).end()
+)

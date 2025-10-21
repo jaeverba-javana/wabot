@@ -24,13 +24,17 @@
 		/*--jvi-elevation-shadow2: rgba(var(--theme-color-shadow), 0.14);*/
 		/*--jvi-elevation-shadow3: rgba(var(--theme-color-shadow), 0.12);*/
 
+		--jvi-elevation-dp-6-1: 0px 3px 5px -1px var(--jvi-elevation-shadow1);
+		--jvi-elevation-dp-6-2: 0px 6px 10px 0px var(--jvi-elevation-shadow2);
+		--jvi-elevation-dp-6-3: 0px 1px 18px 0px var(--jvi-elevation-shadow3);
+
 		--jvi-elevation-dp-0: 0px 0px 0px 0px var(--jvi-elevation-shadow1), 0px 0px 0px 0px var(--jvi-elevation-shadow2), 0px 0px 0px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-1: 0px 2px 1px -1px var(--jvi-elevation-shadow1), 0px 1px 1px 0px var(--jvi-elevation-shadow2), 0px 1px 3px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-2: 0px 3px 1px -2px var(--jvi-elevation-shadow1), 0px 2px 2px 0px var(--jvi-elevation-shadow2), 0px 1px 5px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-3: 0px 3px 3px -2px var(--jvi-elevation-shadow1), 0px 3px 4px 0px var(--jvi-elevation-shadow2), 0px 1px 8px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-4: 0px 2px 4px -1px var(--jvi-elevation-shadow1), 0px 4px 5px 0px var(--jvi-elevation-shadow2), 0px 1px 10px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-5: 0px 3px 5px -1px var(--jvi-elevation-shadow1), 0px 5px 8px 0px var(--jvi-elevation-shadow2), 0px 1px 14px 0px var(--jvi-elevation-shadow3);
-		--jvi-elevation-dp-6: 0px 3px 5px -1px var(--jvi-elevation-shadow1), 0px 6px 10px 0px var(--jvi-elevation-shadow2), 0px 1px 18px 0px var(--jvi-elevation-shadow3);
+		--jvi-elevation-dp-6: var(--jvi-elevation-dp-6-1), var(--jvi-elevation-dp-6-1), var(--jvi-elevation-dp-6-1), 0px 1px 18px 0px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-7: 0px 4px 5px -2px var(--jvi-elevation-shadow1), 0px 7px 10px 1px var(--jvi-elevation-shadow2), 0px 2px 16px 1px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-8: 0px 5px 5px -3px var(--jvi-elevation-shadow1), 0px 8px 10px 1px var(--jvi-elevation-shadow2), 0px 3px 14px 2px var(--jvi-elevation-shadow3);
 		--jvi-elevation-dp-9: 0px 5px 6px -3px var(--jvi-elevation-shadow1), 0px 9px 12px 1px var(--jvi-elevation-shadow2), 0px 3px 16px 2px var(--jvi-elevation-shadow3);

@@ -3,30 +3,79 @@
 		<svg
 				ref="svg"
 				class="canvas"
-				:style="{ cursor: isPanning ? 'grabbing' : 'default' }"
+				:class="[this.currentAction]"
+				:style="{ cursor: isPanning ? 'grabbing' : this.currentAction ===
+				'moving' ? 'move' : 'default' }"
+				@contextmenu.prevent
 				@mousedown="onMouseDown"
 				@mousemove="onMouseMove"
 				@mouseup="onMouseUp"
 				@mouseleave="onMouseUp"
 				@wheel="onWheel"
 		>
+			<defs>
+				<defs>
+					<filter id="elevation3" x="-100%" y="-100%" width="300%" height="300%">
+						<!-- Primera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1" />
+						<feGaussianBlur in="offset1" stdDeviation="5" result="blur1"/>
+						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
+						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
+
+						<!-- Segunda sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="6" result="offset2"/>
+						<feGaussianBlur in="offset2" stdDeviation="10" result="blur2"/>
+						<feFlood flood-color="rgba(0, 0, 255, 0.14)" result="color2"/>
+						<feComposite in="color2" in2="blur2" operator="in" result="shadow2"/>
+
+						<!-- Tercera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="1" result="offset3"/>
+						<feGaussianBlur in="offset3" stdDeviation="18" result="blur3"/>
+						<feFlood flood-color="rgba(0, 255, 0, 0.12)" result="color3"/>
+						<feComposite in="color3" in2="blur3" operator="in" result="shadow3"/>
+
+						<!-- Combinar todas las sombras -->
+						<feMerge>
+							<feMergeNode in="shadow2"/>
+							<feMergeNode in="shadow1"/>
+							<feMergeNode in="shadow3"/>
+							<feMergeNode in="SourceGraphic"/>
+						</feMerge>
+					</filter>
+				</defs>
+
+				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
+					<feDropShadow dx="8" dy="8" stdDeviation="4"
+												flood-color="blue" flood-opacity="0.4"/>
+				</filter>
+			</defs>
+
 			<g ref="content"
 				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
-
+				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
+											 :node="item" @mousedown="event =>
+											 handleNodeMouseDown(item, event)"/>
 			</g>
 		</svg>
 
 		<div class="details"></div>
 
 		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
-				 viewBox="0 0 640 640"><path
-				fill="currentColor" d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/></svg>
+				 viewBox="0 0 640 640">
+			<path
+					fill="currentColor"
+					d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
+		</svg>
 	</div>
 </template>
 
 <script lang="ts">
+import {useChatbotStore} from "../../stores/chatbot.store.ts";
+import MessageCanvas from "../components/canvas/MessageCanvas.vue";
+
 export default {
 	name: 'ChatbotView',
+	components: {MessageCanvas},
 	data() {
 		return {
 			isPanning: false as boolean,
@@ -39,18 +88,30 @@ export default {
 			scale: 1 as number,
 			minScale: 0.2 as number,
 			maxScale: 3 as number,
+			currentAction: undefined as 'moving' | undefined,
+			startMouseX: 0 as number,
+			startMouseY: 0 as number,
+
+			selectedItems: [] as string[],
 		}
+	},
+	setup() {
+		const chatbotStore = useChatbotStore();
+
+		return {chatbotStore}
 	},
 	methods: {
 		onMouseDown(e: MouseEvent) {
+			e.preventDefault();
+
 			// Middle mouse button initiates panning
 			if (e.button === 1) {
-				e.preventDefault();
 				this.isPanning = true;
 				this.panStartX = e.clientX;
 				this.panStartY = e.clientY;
 				this.startOffsetX = this.offsetX;
 				this.startOffsetY = this.offsetY;
+				return
 			}
 		},
 		onMouseMove(e: MouseEvent) {
@@ -62,18 +123,39 @@ export default {
 			// console.log(svgElement)
 			// console.log(svgCoords)
 
-			if (!this.isPanning) return;
-			e.preventDefault();
-			const dx = e.clientX - this.panStartX;
-			const dy = e.clientY - this.panStartY;
-			this.offsetX = this.startOffsetX + dx;
-			this.offsetY = this.startOffsetY + dy;
-			this.clampOffsets();
-		},
-		onMouseUp(e: MouseEvent) {
+			if (this.currentAction === 'moving') {
+				// console.log('moving: ', this.selectedItems)
+				for (const nodeId of this.selectedItems) {
+					const currentNodeIndex = this.chatbotStore.nodes.findIndex((i) =>
+						i._id === nodeId)
+
+					this.chatbotStore.nodes[currentNodeIndex].metadata.positionX =
+						this.chatbotStore.nodes[currentNodeIndex].metadata.positionX +
+						(e.movementX / this.scale);
+					this.chatbotStore.nodes[currentNodeIndex].metadata.positionY =
+						this.chatbotStore.nodes[currentNodeIndex].metadata.positionY +
+						(e.movementY / this.scale);
+				}
+			}
+
 			if (this.isPanning) {
 				e.preventDefault();
+				const dx = e.clientX - this.panStartX;
+				const dy = e.clientY - this.panStartY;
+				this.offsetX = this.startOffsetX + dx;
+				this.offsetY = this.startOffsetY + dy;
+				this.clampOffsets();
+			}
+
+		},
+		onMouseUp(e: MouseEvent) {
+			if (e.button === 1 && this.isPanning) {
+				e.preventDefault();
 				this.isPanning = false;
+			}
+
+			if (e.button === 0) {
+				this.currentAction = undefined;
 			}
 		},
 		onWheel(e: WheelEvent) {
@@ -107,7 +189,7 @@ export default {
 			this.clampOffsets();
 		},
 
-		// Método alternativo sin usar getScreenCTM
+		// Metodo alternativo sin usar getScreenCTM
 		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
@@ -120,7 +202,7 @@ export default {
 		},
 
 
-		// Método para convertir coordenadas de pantalla a coordenadas SVG
+		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
 		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
@@ -186,10 +268,31 @@ export default {
 			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
 			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
 
+		},
+
+		handleNodeMouseDown(node: any, e: MouseEvent) {
+			if (e.button === 0) {
+				e.preventDefault();
+				if (!this.currentAction) {
+
+					this.currentAction = 'moving';
+
+					if (!this.selectedItems.length) this.selectedItems = [node._id];
+					// this.startOffsetX = node.metadata.positionX;
+					// this.startOffsetY = node.metadata.positionY;
+				}
+			}
+		},
+
+		stopMoving() {
+
 		}
 	},
 	mounted() {
 		this.center()
+	},
+	beforeUpdate() {
+		// this.center()
 	}
 }
 </script>
@@ -211,6 +314,13 @@ export default {
 	//z-index: -1;
 	flex: 1;
 	overflow: visible;
+	//pointer-events: none;
+	//user-select: none;
+
+	& > g {
+		pointer-events: none;
+		user-select: none;
+	}
 }
 
 .details {

@@ -1,4 +1,5 @@
 import {Router} from "express";
+import {sharedCache} from "../utils/cache.js";
 
 const router = Router({strict: true})
 
@@ -50,11 +51,33 @@ router.get('/webhook', reStructQuery, requireAuth, (req, res) => {
     res.send(req.queries.hub.challenge)
 })
 
+// 15 minutes TTL for deduplication of incoming messages
+const FIFTEEN_MIN_MS = 15 * 60 * 1000;
+
 router.post('/webhook', (req, res) => {
+    try {
+        const entry = req.body?.entry?.[0];
+        const change = entry?.changes?.[0];
+        const value = change?.value;
+        // message id varies based on object; try to extract safely
+        const msg = value?.messages?.[0];
+        const msgId = msg?.id || value?.statuses?.[0]?.id;
 
-    console.log(req.body.entry[0].changes[0].value)
+        if (msgId) {
+            const cacheKey = `wab:msg:${msgId}`;
+            if (sharedCache.has(cacheKey)) {
+                // Duplicate delivery within 15m, acknowledge and exit
+                return res.status(200).send("ok");
+            }
+            sharedCache.set(cacheKey, true, FIFTEEN_MIN_MS);
+        }
 
-    res.send("ok")
+        console.log(value);
+        res.send("ok");
+    } catch (e) {
+        console.error("Error processing webhook:", e);
+        res.status(200).send("ok"); // Always 200 to avoid retries flooding
+    }
 })
 
-export default router
+export default Router().use('/wab', router)
