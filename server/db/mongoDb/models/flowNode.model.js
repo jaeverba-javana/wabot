@@ -1,117 +1,119 @@
 // models/FlowNode.js
 import mongoose from 'mongoose';
 
-const flowNodeSchema = new mongoose.Schema({
-	chatbotId: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Chatbot',
-		required: [true, 'Account ID es requerido'],
-		index: true
-	},
-	/*node_id: {
-		type: String, 
-		required: [true, 'Node ID es requerido'], 
-		trim: true
-	},*/
-	nodeType: {
-		type: String,
-		enum: ['start', 'message', 'question', 'condition', 'action', 'end'],
-		required: [true, 'Tipo de nodo es requerido']
-	},
-	name: {
-		type: String,
-		required: true,
-		trim: true
-	},
-	description: {
-		type: String,
-		trim: true
-	}, // Contenido del mensaje que se envía al usuario
-	message: {
-		text: String,
-		media_url: String,
-		media_type: {
-			type: String,
-			enum: ['image', 'document', 'video', 'audio']
-		},
-		template_name: String, // Para mensajes de plantilla de WhatsApp
-		header: String,
-		footer: String
-	}, // Opciones que se presentan al usuario (botones interactivos)
-	options: [{
-		option_id: {
-			type: String,
-			required: true,
-			trim: true
-		},
-		text: {
-			type: String,
-			required: true,
-			trim: true
-		},
-		description: String,
-		next_node_id: {
-			type: String,
-			required: true
-		}, // Para botones de WhatsApp
-		button_type: {
-			type: String,
-			enum: ['reply', 'url', 'phone'],
-			default: 'reply'
-		},
-		url: String, // Si es button_type: 'url'
-		phone_number: String // Si es button_type: 'phone'
-	}], // Para matching de respuestas abiertas (sin botones)
-	patterns: [{
-		pattern: String, // Regex o texto exacto
-		match_type: {
-			type: String, enum: ['exact', 'contains', 'regex'], default: 'contains'
-		}, case_sensitive: {
-			type: Boolean, default: false
-		}, next_node_id: String
-	}], // Nodo al que se dirige si no hay match (fallback)
-	fallbackNodeId: {
-		type: String, default: null
-	}, // Para nodos de tipo 'action' (ejecutar lógica personalizada)
-	action: {
-		type: {
-			type: String,
-			enum: ['save_data', 'api_call', 'transfer_agent', 'set_variable', 'send_email'],
-		}, config: mongoose.Schema.Types.Mixed // Configuración flexible según el tipo de acción
-	}, // Condiciones para nodos condicionales
-	conditions: [{
-		variable: String, // Nombre de la variable a evaluar
-		operator: {
-			type: String,
-			enum: ['equals', 'not_equals', 'contains', 'greater_than', 'less_than', 'exists']
-		}, value: mongoose.Schema.Types.Mixed, next_node_id: String
-	}], // Variables que se guardan en este nodo
-	variablesToSave: [{
-		variable_name: String, source: {
-			type: String, enum: ['user_input', 'static', 'computed']
-		}, value: mongoose.Schema.Types.Mixed
-	}], // Tiempo de espera antes de enviar el siguiente mensaje (ms)
-	delayMs: {
-		type: Number, default: 0, min: 0
-	}, // Si es un nodo inicial (entrada al flujo)
-	isStart: {
-		type: Boolean, default: false, index: true
-	}, // Si el nodo está activo
-	isActive: {
-		type: Boolean, default: true
-	}, // Orden de prioridad para evaluación
-	priority: {
-		type: Number, default: 0
-	}, // Metadata adicional
-	metadata: {
-		positionX: {type: Number, default: 0}, // Para representación visual en editor
-		positionY: {type: Number, default: 0},
-		color: String,
-		tags: [String]
-	}
-}, {
-	timestamps: true
-});
+const flowNodeSchema = new mongoose.Schema(
+		{
+			chatbotId: {
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Chatbot',
+				required: [true, 'Account ID es requerido'],
+				index: true
+			},
+			/*node_id: {
+				type: String,
+				required: [true, 'Node ID es requerido'],
+				trim: true
+			},*/
+			nodeType: {
+				type: String,
+				enum: ['start', 'message', 'question', 'condition', 'action', 'end'],
+				required: [true, 'Tipo de nodo es requerido']
+			},
+			name: {
+				type: String,
+				required: true,
+				trim: true
+			},
+			description: {
+				type: String,
+				trim: true
+			}, // Contenido del mensaje que se envía al usuario
+			message: {
+				text: String,
+				media_url: String,
+				media_type: {
+					type: String,
+					enum: ['image', 'document', 'video', 'audio']
+				},
+				template_name: String, // Para mensajes de plantilla de WhatsApp
+				header: String,
+				footer: String
+			}, // Opciones que se presentan al usuario (botones interactivos)
+			options: [{
+				option_id: {
+					type: String,
+					required: true,
+					trim: true
+				},
+				text: {
+					type: String,
+					required: true,
+					trim: true
+				},
+				description: String,
+				next_node_id: {
+					type: String,
+					required: true
+				}, // Para botones de WhatsApp
+				button_type: {
+					type: String,
+					enum: ['reply', 'url', 'phone'],
+					default: 'reply'
+				},
+				url: String, // Si es button_type: 'url'
+				phone_number: String // Si es button_type: 'phone'
+			}], // Para matching de respuestas abiertas (sin botones)
+			patterns: [{
+				pattern: String, // Regex o texto exacto
+				match_type: {
+					type: String, enum: ['exact', 'contains', 'regex'], default: 'contains'
+				}, case_sensitive: {
+					type: Boolean, default: false
+				}, next_node_id: String
+			}], // Nodo al que se dirige si no hay match (fallback)
+			fallbackNodeId: {
+				type: String, default: null
+			}, // Para nodos de tipo 'action' (ejecutar lógica personalizada)
+			action: {
+				type: {
+					type: String,
+					enum: ['save_data', 'api_call', 'transfer_agent', 'set_variable', 'send_email'],
+				}, config: mongoose.Schema.Types.Mixed // Configuración flexible según el tipo de acción
+			}, // Condiciones para nodos condicionales
+			conditions: [{
+				variable: String, // Nombre de la variable a evaluar
+				operator: {
+					type: String,
+					enum: ['equals', 'not_equals', 'contains', 'greater_than', 'less_than', 'exists']
+				}, value: mongoose.Schema.Types.Mixed, next_node_id: String
+			}], // Variables que se guardan en este nodo
+			variablesToSave: [{
+				variable_name: String, source: {
+					type: String, enum: ['user_input', 'static', 'computed']
+				}, value: mongoose.Schema.Types.Mixed
+			}], // Tiempo de espera antes de enviar el siguiente mensaje (ms)
+			delayMs: {
+				type: Number, default: 0, min: 0
+			}, // Si es un nodo inicial (entrada al flujo)
+			isStart: {
+				type: Boolean, default: false, index: true
+			}, // Si el nodo está activo
+			isActive: {
+				type: Boolean, default: true
+			}, // Orden de prioridad para evaluación
+			priority: {
+				type: Number, default: 0
+			}, // Metadata adicional
+			metadata: {
+				positionX: {type: Number, default: 0}, // Para representación visual en editor
+				positionY: {type: Number, default: 0},
+				color: String,
+				tags: [String]
+			}
+		}, {
+			timestamps: true
+		}
+);
 
 // Índices compuestos
 flowNodeSchema.index({chatbotId: 1, _id: 1}, {unique: true});
