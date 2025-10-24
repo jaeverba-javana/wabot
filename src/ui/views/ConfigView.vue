@@ -236,15 +236,6 @@ export default {
 			})
 		}
 
-		watch(appStore.user, (value, oldValue) => {
-			console.log("Ha cambiado")
-
-			business.email.value.value = appStore.user.email
-			business.phone.value.value = appStore.user.phone
-
-			chatbot.phoneId.value.value = appStore.chatbot.phoneId
-			chatbot.token.value.value = appStore.chatbot.token
-		})
 		business.email.value.value = appStore.user.email
 		business.phone.value.value = appStore.user.phone
 
@@ -306,6 +297,9 @@ export default {
 				this.loading = false;
 				const toast = useToastStore();
 				this.appStore.setUser(r.data.data.user)
+				this.appStore.setChatbot(r.data.data.chatbot)
+				this.fields.business.email.value.value = this.appStore.user.email
+				this.fields.business.phone.value.value = this.appStore.user.phone
 				toast.show('La información se ha guardado correctamente', 'success')
 				// this.isOtpActive = true;
 			}).catch((err: any) => {

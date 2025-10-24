@@ -21,9 +21,13 @@ export const useAppStore = defineStore("app", () => {
 			chatbot.value = data.message.chatbot
 		}).catch(reason => console.error(reason))
 
-	function setUser(user: User) {
-		this.user = user
+	function setUser(u: User) {
+		user.value = u
 	}
 
-	return {user, chatbot, setUser}
+	function setChatbot(c: ChatBot) {
+		chatbot.value = c
+	}
+
+	return {user, chatbot, setUser, setChatbot}
 })

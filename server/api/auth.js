@@ -10,7 +10,7 @@ export const authenticate = async (req, res, next) => {
         req.user = user;
         next()
     } else {
-        res.status(4.4).end()
+        res.status(404).end()
     }
 }
 
