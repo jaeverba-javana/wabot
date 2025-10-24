@@ -4,11 +4,12 @@ import {defineComponent} from 'vue'
 export default defineComponent({
 	name: "MessageCanvas",
 	props: {
-		node: {type: Object, required: true}
+		node: {type: Object, required: true},
+		selected: {type: Boolean, default: false},
 	},
 	emits: ['mousedown'],
 	data: () => ({
-
+		hovered: false,
 
 	}),
 	setup: () => {
@@ -26,6 +27,24 @@ export default defineComponent({
 			// this.startOffsetY = node.metadata.positionY;
 			// this.panStartX = event.clientX;
 			// this.panStartY = event.clientY;
+		},
+		handleHover(event, action) {
+			const nodeElement = this.$refs.nodeRect as HTMLOrSVGElement
+			// console.log(nodeElement.attributes.filter)
+			if (action === 'over') {
+				this.hovered = true
+				return
+			}
+
+			this.hovered = false
+
+		}
+	},
+	computed: {
+		status() {
+			if (this.selected) return 'selected'
+			if (this.hovered) return 'hovered'
+			return 'default'
 		}
 	}
 })
@@ -35,10 +54,12 @@ export default defineComponent({
 	<g>
 		<g class="node">
 			<rect
+					ref="nodeRect"
 					:x="node.metadata.positionX" :y="node.metadata.positionY"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
-					stroke="currentcolor" stroke-width="2" fill="white"
-					filter="url(#elevation3)"/>
+					:stroke="status === 'selected'? '#0f0' : 'currentcolor'"
+					stroke-width="2" fill="white"
+					:filter="(this.status === 'hovered' || this.status === 'selected') ? 'url(#elevation3)' : ''"/>
 
 			<text :x="node.metadata.positionX + 5"
 						:y="node.metadata.positionY + 18">
@@ -58,6 +79,8 @@ export default defineComponent({
 		<g class="controls">
 			<rect
 					@mousedown="handleNodeMouseDown"
+					@mouseover.self.stop="handleHover( $event, 'over')"
+					@mouseout.self.stop="handleHover($event, 'out')"
 					class="move"
 					:x="node.metadata.positionX" :y="node.metadata.positionY"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
@@ -100,6 +123,7 @@ export default defineComponent({
 		//cursor: move;
 		pointer-events: fill;
 	}
+
 	line {
 		pointer-events: stroke;
 

@@ -54,7 +54,8 @@
 				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
 				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
 											 :node="item" @mousedown="event =>
-											 handleNodeMouseDown(item, event)"/>
+											 handleNodeMouseDown(item, event)"
+											 :selected="selectedItems.includes(item._id)"/>
 			</g>
 		</svg>
 
@@ -91,6 +92,7 @@ export default {
 			currentAction: undefined as 'moving' | undefined,
 			startMouseX: 0 as number,
 			startMouseY: 0 as number,
+			isMouseDownOnNode: false as boolean,
 
 			selectedItems: [] as string[],
 		}
@@ -102,6 +104,7 @@ export default {
 	},
 	methods: {
 		onMouseDown(e: MouseEvent) {
+			if (!this.$refs.svg) return;
 			e.preventDefault();
 
 			// Middle mouse button initiates panning
@@ -112,9 +115,29 @@ export default {
 				this.startOffsetX = this.offsetX;
 				this.startOffsetY = this.offsetY;
 				return
+			} if (e.button === 0) {
+
+				if (e.target === this.$refs.svg) {
+					this.selectedItems = []
+				}
 			}
 		},
 		onMouseMove(e: MouseEvent) {
+			// If mouse was pressed on a node, only switch to 'moving' when actual movement occurs and button remains pressed
+			if (this.isMouseDownOnNode) {
+				// e.buttons & 1 === 1 means left button is currently pressed
+				if ((e.buttons & 1) === 1) {
+					if (this.currentAction !== 'moving') {
+						// Detect any movement from the starting point
+						if (e.clientX !== this.startMouseX || e.clientY !== this.startMouseY) {
+							this.currentAction = 'moving';
+						}
+					}
+				} else {
+					// Left button was released without moving
+					this.isMouseDownOnNode = false;
+				}
+			}
 
 			// Obtener las coordenadas del mouse en el espacio SVG
 			// this.mouseX = svgCoords.x;
@@ -148,16 +171,17 @@ export default {
 			}
 
 		},
-		onMouseUp(e: MouseEvent) {
-			if (e.button === 1 && this.isPanning) {
-				e.preventDefault();
-				this.isPanning = false;
-			}
-
-			if (e.button === 0) {
-				this.currentAction = undefined;
-			}
-		},
+			onMouseUp(e: MouseEvent) {
+				if (e.button === 1 && this.isPanning) {
+					e.preventDefault();
+					this.isPanning = false;
+				}
+				
+				if (e.button === 0) {
+					this.currentAction = undefined;
+					this.isMouseDownOnNode = false;
+				}
+			},
 		onWheel(e: WheelEvent) {
 			// Zoom only when Ctrl key is pressed
 			if (!e.ctrlKey) return;
@@ -272,15 +296,11 @@ export default {
 
 		handleNodeMouseDown(node: any, e: MouseEvent) {
 			if (e.button === 0) {
-				e.preventDefault();
-				if (!this.currentAction) {
-
-					this.currentAction = 'moving';
-
-					if (!this.selectedItems.length) this.selectedItems = [node._id];
-					// this.startOffsetX = node.metadata.positionX;
-					// this.startOffsetY = node.metadata.positionY;
-				}
+				// Prepare for potential move, but don't activate until mouse moves
+				this.startMouseX = e.clientX;
+				this.startMouseY = e.clientY;
+				this.isMouseDownOnNode = true;
+				if (!this.selectedItems.length) this.selectedItems = [node._id];
 			}
 		},
 
