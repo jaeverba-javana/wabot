@@ -50,9 +50,11 @@ height: 100dvh;
 
   margin-left: 10%;
 
+	width: fit-content;
+
   .authWrapper {
     interpolate-size: allow-keywords;
-    width: 25em;
+    width: 35em;
     /*height: 30em;*/
     display: flex;
     flex-direction: column;
@@ -67,6 +69,10 @@ height: 100dvh;
 
     /*background-color: rgb(var(--v-theme-primary));*/
     color: rgba(var(--v-theme-onPrimary), .7);
+
+		h2 {
+			text-align: center;
+		}
 
     > * {
       flex: 1;
@@ -102,6 +108,7 @@ height: 100dvh;
   .body {
     background-color: rgb(var(--v-theme-surface));
     flex: 1;
+		padding: 1em;
   }
 }
 </style>

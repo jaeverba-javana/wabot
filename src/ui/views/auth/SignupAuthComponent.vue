@@ -141,6 +141,8 @@ export default defineComponent({
         justify-content: start;
 
         row-gap: 1em;
+
+				padding: 4rem 0;
       }
     }
   }
