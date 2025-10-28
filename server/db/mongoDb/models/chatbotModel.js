@@ -97,6 +97,16 @@ const chatbotSchema = new Schema({
 	timestamps: true
 });
 
+chatbotSchema.statics.findByUserId = function (userId) {
+	return new Promise((resolve, reject) => {
+		this.findOne({
+			userId,
+		}).exec().then(chatbot => {
+			resolve(chatbot || new this({userId}).save());
+		}).catch(err => reject(err));
+	})
+};
+
 // Ensure each user can only have one chatbot configuration
 // chatbotSchema.index({userId: 1}, {unique: true});
 

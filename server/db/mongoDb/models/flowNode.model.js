@@ -1,6 +1,29 @@
 // models/FlowNode.js
 import mongoose from 'mongoose';
 
+const metadataSchema = new mongoose.Schema(
+		{
+			positionX: {type: Number, default: 0}, // Para representación visual en editor
+			positionY: {type: Number, default: 0},
+			color: String,
+			tags: [String]
+		}
+)
+
+const messageSchema = new mongoose.Schema(
+		{
+			text: {type: String, default: 'Hola'},
+			media_url: String,
+			media_type: {
+				type: String,
+				enum: ['image', 'document', 'video', 'audio']
+			},
+			template_name: String, // Para mensajes de plantilla de WhatsApp
+			header: {type: String, default: ''},
+			footer: {type: String, default: ''}
+		}
+)
+
 const flowNodeSchema = new mongoose.Schema(
 		{
 			chatbotId: {
@@ -29,16 +52,10 @@ const flowNodeSchema = new mongoose.Schema(
 				trim: true
 			}, // Contenido del mensaje que se envía al usuario
 			message: {
-				text: String,
-				media_url: String,
-				media_type: {
-					type: String,
-					enum: ['image', 'document', 'video', 'audio']
-				},
-				template_name: String, // Para mensajes de plantilla de WhatsApp
-				header: String,
-				footer: String
-			}, // Opciones que se presentan al usuario (botones interactivos)
+				type: messageSchema,
+				default: () => ({})
+			}, // Opciones que se presentan al usuario (botones
+			// interactivos)
 			options: [{
 				option_id: {
 					type: String,
@@ -104,12 +121,7 @@ const flowNodeSchema = new mongoose.Schema(
 			priority: {
 				type: Number, default: 0
 			}, // Metadata adicional
-			metadata: {
-				positionX: {type: Number, default: 0}, // Para representación visual en editor
-				positionY: {type: Number, default: 0},
-				color: String,
-				tags: [String]
-			}
+			metadata: metadataSchema
 		}, {
 			timestamps: true
 		}
@@ -128,7 +140,7 @@ flowNodeSchema.statics.findStartNode = function (chatbotId) {
 };
 
 flowNodeSchema.statics.findByChatbotId = function (chatbotId) {
-	return this.find({chatbotId: chatbotId})
+	return this.find({chatbotId})
 			.then(nodes => {
 				// console.log('nodes', nodes)
 				if (nodes && nodes.length) return nodes;

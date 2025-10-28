@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { isAuthenticated } from '../api/auth.js';
 import { Chatbot } from './../db/mongoDb/models/index.js';
-import { chatBotController } from './../controller/index.js';
 import {wabaApi} from "../utils/axios.js";
 
 const router = Router({
@@ -18,12 +17,12 @@ const requireAuth = async (req, res, next) => {
 }
 
 router.patch('/', async (req, res) => {
-	const chatbot = await chatBotController.get(req.user._id)
+	const chatbot = await Chatbot.findByUserId(req.user._id)
 	console.log(chatbot)
 	chatbot.phoneId = req.body.phoneId
 	chatbot.token = req.body.token
 
-	await chatBotController.update(chatbot)
+	await chatbot.save()
 
 	const {data: wabaResponse} = await wabaApi(
 			chatbot.phoneId,

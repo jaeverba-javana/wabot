@@ -10,14 +10,13 @@
 				@mousedown="onMouseDown"
 				@mousemove="onMouseMove"
 				@mouseup="onMouseUp"
-				@mouseleave="onMouseUp"
 				@wheel="onWheel"
 		>
 			<defs>
 				<defs>
 					<filter id="elevation3" x="-100%" y="-100%" width="300%" height="300%">
 						<!-- Primera sombra -->
-						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1" />
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1"/>
 						<feGaussianBlur in="offset1" stdDeviation="5" result="blur1"/>
 						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
 						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
@@ -55,11 +54,31 @@
 				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
 											 :node="item" @mousedown="event =>
 											 handleNodeMouseDown(item, event)"
-											 :selected="selectedItems.includes(item._id)"/>
+											 :selected="chatbotStore.selectedNodes.includes(item._id)"/>
 			</g>
 		</svg>
 
-		<div class="details"></div>
+		<div class="details">
+			<h2>Detalles</h2>
+
+			<div v-if="chatbotStore.selectedNodes.length === 1" class="wrapper">
+				<h3>Mensaje</h3>
+				<VTextField
+						label="Nombre"
+						type="text"
+						v-model="detailNode.name"/>
+
+				<VTextField
+						label="Header"
+						type="text"
+						v-model="detailNode.message.header"/>
+
+				<VTextarea
+						label="Mensaje"
+						v-model="detail.message.text.value.value"
+						:errorMessages="detail.message.text.errors.value"/>
+			</div>
+		</div>
 
 		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
 				 viewBox="0 0 640 640">
@@ -73,6 +92,7 @@
 <script lang="ts">
 import {useChatbotStore} from "../../stores/chatbot.store.ts";
 import MessageCanvas from "../components/canvas/MessageCanvas.vue";
+import {computed, watch} from "vue";
 
 export default {
 	name: 'ChatbotView',
@@ -87,23 +107,80 @@ export default {
 			startOffsetX: 0 as number,
 			startOffsetY: 0 as number,
 			scale: 1 as number,
-			minScale: 0.2 as number,
-			maxScale: 3 as number,
 			currentAction: undefined as 'moving' | undefined,
 			startMouseX: 0 as number,
 			startMouseY: 0 as number,
 			isMouseDownOnNode: false as boolean,
-
-			selectedItems: [] as string[],
 		}
 	},
 	setup() {
 		const chatbotStore = useChatbotStore();
 
-		return {chatbotStore}
-	},
+		const detailNode = computed(() => {
+				console.log('tamos')
+				if (chatbotStore.selectedNodes.length === 1) {
+					return chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
+				}
+				return undefined
+			}
+		)
+
+		const detail = {
+			name: computed({
+				get() {
+					return detailNode.value?.name ?? '';
+				},
+				set(v) {
+					detailNode.value.name = v;
+				},
+			}),
+			message: {
+				header: {
+					value: computed({
+						get: () => detailNode.value?.message.header,
+						set: v => detailNode.value.message.header = v,
+					})
+				},
+				text: {
+					value: computed({
+						get: () => detailNode.value?.message.text ?? '',
+						set: v => {
+							console.log(v)
+							return detailNode.value.message.text = v
+						},
+					}),
+					errors: computed(() => {
+						if (!detailNode.value) return [];
+						const errors: string[] = [];
+						if (!detailNode.value.message.text) {
+							errors.push('El mensaje es requerido');
+						}
+						chatbotStore.updateNode({
+							_id: detailNode.value._id, message: {
+								text: detailNode.value.message.text
+							}
+						})
+						return errors;
+					})
+				}
+			}
+		}
+
+		return {
+			minScale: 0.2 as number,
+			maxScale: 3 as number,
+			zoomIntensity: 0.0015 as number, // tune sensitivity
+			chatbotStore,
+			detailNode,
+			detail
+		}
+	}
+	,
 	methods: {
-		onMouseDown(e: MouseEvent) {
+		onMouseDown(e
+								:
+								MouseEvent
+		) {
 			if (!this.$refs.svg) return;
 			e.preventDefault();
 
@@ -115,14 +192,19 @@ export default {
 				this.startOffsetX = this.offsetX;
 				this.startOffsetY = this.offsetY;
 				return
-			} if (e.button === 0) {
+			}
+			if (e.button === 0) {
 
 				if (e.target === this.$refs.svg) {
-					this.selectedItems = []
+					this.chatbotStore.cleanSelectedNodes();
 				}
 			}
-		},
-		onMouseMove(e: MouseEvent) {
+		}
+		,
+		onMouseMove(e
+								:
+								MouseEvent
+		) {
 			// If mouse was pressed on a node, only switch to 'moving' when actual movement occurs and button remains pressed
 			if (this.isMouseDownOnNode) {
 				// e.buttons & 1 === 1 means left button is currently pressed
@@ -148,7 +230,7 @@ export default {
 
 			if (this.currentAction === 'moving') {
 				// console.log('moving: ', this.selectedItems)
-				for (const nodeId of this.selectedItems) {
+				for (const nodeId of this.chatbotStore.selectedNodes) {
 					const currentNodeIndex = this.chatbotStore.nodes.findIndex((i) =>
 						i._id === nodeId)
 
@@ -170,19 +252,31 @@ export default {
 				this.clampOffsets();
 			}
 
-		},
-			onMouseUp(e: MouseEvent) {
-				if (e.button === 1 && this.isPanning) {
-					e.preventDefault();
-					this.isPanning = false;
-				}
-				
-				if (e.button === 0) {
+		}
+		,
+		onMouseUp(e
+							:
+							MouseEvent
+		) {
+			if (e.button === 1 && this.isPanning) {
+				e.preventDefault();
+				this.isPanning = false;
+			}
+
+			if (e.button === 0) {
+				if (this.currentAction === 'moving') {
 					this.currentAction = undefined;
-					this.isMouseDownOnNode = false;
+					this.chatbotStore.updateSelectedNodesPosition();
+					// console.log(e)
 				}
-			},
-		onWheel(e: WheelEvent) {
+				this.isMouseDownOnNode = false;
+			}
+		}
+		,
+		onWheel(e
+						:
+						WheelEvent
+		) {
 			// Zoom only when Ctrl key is pressed
 			if (!e.ctrlKey) return;
 			e.preventDefault();
@@ -191,7 +285,7 @@ export default {
 			const svgElement = (this.$refs.svg as SVGSVGElement | undefined);
 			const rect = svgElement.getBoundingClientRect();
 
-			const svgCoords = this.screenToSVGManual(e.clientX, e.clientY, svgElement);
+			// const svgCoords = this.screenToSVGManual(e.clientX, e.clientY, svgElement);
 			const mouseX = e.clientX - rect.left;
 			const mouseY = e.clientY - rect.top;
 
@@ -199,11 +293,10 @@ export default {
 			// console.log([mouseX, mouseY])
 			// console.log([this.offsetX, this.offsetY])
 
-			const zoomIntensity = 0.0015; // tune sensitivity
 			// deltaY > 0 => zoom out, deltaY < 0 => zoom in
 			const oldScale = this.scale;
 
-			const newScale = this.scale * (1 - e.deltaY * zoomIntensity);
+			const newScale = this.scale * (1 - e.deltaY * this.zoomIntensity);
 			this.scale = Math.min(this.maxScale, Math.max(this.minScale, newScale));
 
 			// Ajustar el offset para hacer zoom hacia el mouse
@@ -211,10 +304,18 @@ export default {
 			this.offsetX = mouseX - (mouseX - this.offsetX) * scaleDiff;
 			this.offsetY = mouseY - (mouseY - this.offsetY) * scaleDiff;
 			this.clampOffsets();
-		},
+		}
+		,
 
 		// Metodo alternativo sin usar getScreenCTM
-		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
+		screenToSVGManual(clientX
+											:
+											number, clientY
+											:
+											number, svgElement
+											:
+											SVGSVGElement
+		) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
 			const x = clientX - rect.left;
@@ -223,11 +324,19 @@ export default {
 			const svgX = (x - this.offsetX) / this.scale;
 			const svgY = (y - this.offsetY) / this.scale;
 			return {x: svgX, y: svgY};
-		},
+		}
+		,
 
 
 		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
-		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
+		screenToSVG(screenX
+								:
+								number, screenY
+								:
+								number, svgElement
+								:
+								SVGSVGElement
+		) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
 				const point = svgElement.createSVGPoint();
@@ -237,7 +346,8 @@ export default {
 				return {x: svgPoint.x, y: svgPoint.y};
 			}
 			return {x: 0, y: 0};
-		},
+		}
+		,
 
 		clampOffsets() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -271,7 +381,8 @@ export default {
 			// } else {
 			this.offsetY = Math.min(Math.max(this.offsetY, minOffsetY), maxOffsetY);
 			// }
-		},
+		}
+		,
 
 		center() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -292,25 +403,35 @@ export default {
 			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
 			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
 
-		},
+		}
+		,
 
-		handleNodeMouseDown(node: any, e: MouseEvent) {
-			if (e.button === 0) {
-				// Prepare for potential move, but don't activate until mouse moves
-				this.startMouseX = e.clientX;
-				this.startMouseY = e.clientY;
-				this.isMouseDownOnNode = true;
-				if (!this.selectedItems.length) this.selectedItems = [node._id];
-			}
-		},
+		handleNodeMouseDown(node
+												:
+												any, e
+												:
+												MouseEvent
+		) {
+			// if (e.button === 0) {
+			// Prepare for potential move, but don't activate until mouse moves
+			this.startMouseX = e.clientX;
+			this.startMouseY = e.clientY;
+			this.isMouseDownOnNode = true;
+			if (!this.chatbotStore.selectedNodes.length)
+				this.chatbotStore.setSelectedNodes(node._id)
+			// }
+		}
+		,
 
 		stopMoving() {
 
 		}
-	},
+	}
+	,
 	mounted() {
 		this.center()
-	},
+	}
+	,
 	beforeUpdate() {
 		// this.center()
 	}
@@ -348,6 +469,26 @@ export default {
 	width: var(--details-width);
 	box-shadow: var(--elevation3);
 	background-color: white;
+
+	padding: .5rem;
+	scroll-behavior: smooth;
+	/*
+	overflow-y: auto;
+	*/
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+
+	.wrapper {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		//padding: 0 1rem;
+
+
+	}
 }
 
 .fab {

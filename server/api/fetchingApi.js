@@ -1,6 +1,7 @@
 import {Router} from "express";
 import {authenticate} from "./auth.js";
-import {userController, chatBotController} from './../controller/index.js'
+import {userController} from './../controller/index.js'
+import {Chatbot} from "../db/mongoDb/models/index.js";
 
 
 const router = Router({
@@ -10,7 +11,7 @@ const router = Router({
 router.get('/accountInfo', async (req, res) => {
 	// const {email, phoneId} = req.body
 	const user = userController.clean(req.user)
-	const chatbot = await chatBotController.get(user._id)
+	const chatbot = await Chatbot.findByUserId(user._id)
 
 	// console.log(chatBot)
 

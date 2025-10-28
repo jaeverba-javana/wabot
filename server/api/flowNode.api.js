@@ -19,4 +19,18 @@ router.get('/byChatbotId/:chatbotId', (req, res) => {
 			})
 })
 
-export default Router().use('/node', authenticate, router)
+export default Router()
+		.use('/node', authenticate, router)
+		.use('/nodes', authenticate, Router()
+				.patch('/', async (req, res) => {
+					const promises = []
+
+					req.body.forEach((node) => {
+						promises.push(FlowNode.updateOne({_id: node._id}, node))
+					})
+
+					await Promise.all(promises)
+					
+					res.send({message: 'ok'})
+
+				}))

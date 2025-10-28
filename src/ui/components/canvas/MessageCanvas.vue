@@ -18,7 +18,9 @@ export default defineComponent({
 	methods: {
 		handleNodeMouseDown(event) {
 			if (event.button !== 0) return;
-			console.log("epa")
+
+			event.preventDefault();
+			event.stopPropagation();
 
 			this.$emit('mousedown', event);
 			// this.currentAction = 'moving';
@@ -38,7 +40,7 @@ export default defineComponent({
 
 			this.hovered = false
 
-		}
+		},
 	},
 	computed: {
 		status() {
@@ -57,7 +59,7 @@ export default defineComponent({
 					ref="nodeRect"
 					:x="node.metadata.positionX" :y="node.metadata.positionY"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
-					:stroke="status === 'selected'? '#0f0' : 'currentcolor'"
+					:stroke="status === 'selected'? '#4fd479' : '#a5a5a5'"
 					stroke-width="2" fill="white"
 					:filter="(this.status === 'hovered' || this.status === 'selected') ? 'url(#elevation3)' : ''"/>
 
