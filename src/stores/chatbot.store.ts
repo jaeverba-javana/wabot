@@ -49,9 +49,11 @@ export const useChatbotStore = defineStore('chatbot', () => {
 			const mni = modifiedNodes.findIndex(v => v.data._id === modifiedNode._id)
 			clearTimeout(modifiedNodes[mni].timer)
 			console.log(modifiedNodes[mni].data)
+			axiosApi.patch('/nodes', [modifiedNodes[mni].data])
+				.then(value => console.log('updated node: ', value))
 			modifiedNodes.splice(mni, 1)
 		}
-		console.log(modifiedNodeIndex)
+		// console.log(modifiedNodeIndex)
 		if (modifiedNodeIndex === -1) {
 			const timer = setTimeout(action, 2000)
 

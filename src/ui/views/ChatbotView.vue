@@ -1,94 +1,3 @@
-<template>
-	<div id="ChatbotView">
-		<svg
-				ref="svg"
-				class="canvas"
-				:class="[this.currentAction]"
-				:style="{ cursor: isPanning ? 'grabbing' : this.currentAction ===
-				'moving' ? 'move' : 'default' }"
-				@contextmenu.prevent
-				@mousedown="onMouseDown"
-				@mousemove="onMouseMove"
-				@mouseup="onMouseUp"
-				@wheel="onWheel"
-		>
-			<defs>
-				<defs>
-					<filter id="elevation3" x="-100%" y="-100%" width="300%" height="300%">
-						<!-- Primera sombra -->
-						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1"/>
-						<feGaussianBlur in="offset1" stdDeviation="5" result="blur1"/>
-						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
-						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
-
-						<!-- Segunda sombra -->
-						<feOffset in="SourceAlpha" dx="0" dy="6" result="offset2"/>
-						<feGaussianBlur in="offset2" stdDeviation="10" result="blur2"/>
-						<feFlood flood-color="rgba(0, 0, 255, 0.14)" result="color2"/>
-						<feComposite in="color2" in2="blur2" operator="in" result="shadow2"/>
-
-						<!-- Tercera sombra -->
-						<feOffset in="SourceAlpha" dx="0" dy="1" result="offset3"/>
-						<feGaussianBlur in="offset3" stdDeviation="18" result="blur3"/>
-						<feFlood flood-color="rgba(0, 255, 0, 0.12)" result="color3"/>
-						<feComposite in="color3" in2="blur3" operator="in" result="shadow3"/>
-
-						<!-- Combinar todas las sombras -->
-						<feMerge>
-							<feMergeNode in="shadow2"/>
-							<feMergeNode in="shadow1"/>
-							<feMergeNode in="shadow3"/>
-							<feMergeNode in="SourceGraphic"/>
-						</feMerge>
-					</filter>
-				</defs>
-
-				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
-					<feDropShadow dx="8" dy="8" stdDeviation="4"
-												flood-color="blue" flood-opacity="0.4"/>
-				</filter>
-			</defs>
-
-			<g ref="content"
-				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
-				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
-											 :node="item" @mousedown="event =>
-											 handleNodeMouseDown(item, event)"
-											 :selected="chatbotStore.selectedNodes.includes(item._id)"/>
-			</g>
-		</svg>
-
-		<div class="details">
-			<h2>Detalles</h2>
-
-			<div v-if="chatbotStore.selectedNodes.length === 1" class="wrapper">
-				<h3>Mensaje</h3>
-				<VTextField
-						label="Nombre"
-						type="text"
-						v-model="detailNode.name"/>
-
-				<VTextField
-						label="Header"
-						type="text"
-						v-model="detailNode.message.header"/>
-
-				<VTextarea
-						label="Mensaje"
-						v-model="detail.message.text.value.value"
-						:errorMessages="detail.message.text.errors.value"/>
-			</div>
-		</div>
-
-		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
-				 viewBox="0 0 640 640">
-			<path
-					fill="currentColor"
-					d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
-		</svg>
-	</div>
-</template>
-
 <script lang="ts">
 import {useChatbotStore} from "../../stores/chatbot.store.ts";
 import MessageCanvas from "../components/canvas/MessageCanvas.vue";
@@ -139,27 +48,35 @@ export default {
 					value: computed({
 						get: () => detailNode.value?.message.header,
 						set: v => detailNode.value.message.header = v,
+					}),
+					errors: computed((): string[] => {
+						if (!detailNode.value) return [];
+						const errors: string[] = [];
+						if (detailNode.value.message.header.length > 100)
+							errors.push('Demasiado largo...')
+
+						chatbotStore.updateNode({
+							_id: detailNode.value._id,
+							message: {header: detailNode.value.message.header}
+						});
+						return errors;
 					})
 				},
 				text: {
 					value: computed({
 						get: () => detailNode.value?.message.text ?? '',
-						set: v => {
-							console.log(v)
-							return detailNode.value.message.text = v
-						},
+						set: v => detailNode.value.message.text = v,
 					}),
-					errors: computed(() => {
+					errors: computed((): string[] => {
 						if (!detailNode.value) return [];
 						const errors: string[] = [];
-						if (!detailNode.value.message.text) {
+						if (!detailNode.value.message.text)
 							errors.push('El mensaje es requerido');
-						}
+
 						chatbotStore.updateNode({
-							_id: detailNode.value._id, message: {
-								text: detailNode.value.message.text
-							}
-						})
+							_id: detailNode.value._id,
+							message: {text: detailNode.value.message.text}
+						});
 						return errors;
 					})
 				}
@@ -271,11 +188,11 @@ export default {
 
 
 			const svgElement = (this.$refs.svg as SVGSVGElement | undefined);
-			const rect = svgElement.getBoundingClientRect();
+			const rect = svgElement?.getBoundingClientRect();
 
 			// const svgCoords = this.screenToSVGManual(e.clientX, e.clientY, svgElement);
-			const mouseX = e.clientX - rect.left;
-			const mouseY = e.clientY - rect.top;
+			const mouseX = e.clientX - rect?.left;
+			const mouseY = e.clientY - rect?.top;
 
 			// console.log(svgCoords)
 			// console.log([mouseX, mouseY])
@@ -307,7 +224,7 @@ export default {
 		},
 
 		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
-		screenToSVG(screenX:number, screenY:number, svgElement:SVGSVGElement) {
+		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
 				const point = svgElement.createSVGPoint();
@@ -374,7 +291,7 @@ export default {
 
 		},
 
-		handleNodeMouseDown(node:any, e:MouseEvent) {
+		handleNodeMouseDown(node: any, e: MouseEvent) {
 			// if (e.button === 0) {
 			// Prepare for potential move, but don't activate until mouse moves
 			this.startMouseX = e.clientX;
@@ -399,6 +316,99 @@ export default {
 	}
 }
 </script>
+
+<template>
+	<div id="ChatbotView">
+		<svg
+				ref="svg"
+				class="canvas"
+				:class="[this.currentAction]"
+				:style="{ cursor: isPanning ? 'grabbing' : this.currentAction ===
+				'moving' ? 'move' : 'default' }"
+				@contextmenu.prevent
+				@mousedown="onMouseDown"
+				@mousemove="onMouseMove"
+				@mouseup="onMouseUp"
+				@wheel="onWheel"
+		>
+			<defs>
+				<defs>
+					<filter id="elevation3" x="-100%" y="-100%" width="300%" height="300%">
+						<!-- Primera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1"/>
+						<feGaussianBlur in="offset1" stdDeviation="5" result="blur1"/>
+						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
+						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
+
+						<!-- Segunda sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="6" result="offset2"/>
+						<feGaussianBlur in="offset2" stdDeviation="10" result="blur2"/>
+						<feFlood flood-color="rgba(0, 0, 255, 0.14)" result="color2"/>
+						<feComposite in="color2" in2="blur2" operator="in" result="shadow2"/>
+
+						<!-- Tercera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="1" result="offset3"/>
+						<feGaussianBlur in="offset3" stdDeviation="18" result="blur3"/>
+						<feFlood flood-color="rgba(0, 255, 0, 0.12)" result="color3"/>
+						<feComposite in="color3" in2="blur3" operator="in" result="shadow3"/>
+
+						<!-- Combinar todas las sombras -->
+						<feMerge>
+							<feMergeNode in="shadow2"/>
+							<feMergeNode in="shadow1"/>
+							<feMergeNode in="shadow3"/>
+							<feMergeNode in="SourceGraphic"/>
+						</feMerge>
+					</filter>
+				</defs>
+
+				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
+					<feDropShadow dx="8" dy="8" stdDeviation="4"
+												flood-color="blue" flood-opacity="0.4"/>
+				</filter>
+			</defs>
+
+			<g ref="content"
+				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
+				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
+											 :node="item" @mousedown="event =>
+											 handleNodeMouseDown(item, event)"
+											 :selected="chatbotStore.selectedNodes.includes(item._id)"/>
+			</g>
+		</svg>
+
+		<div class="details">
+			<h2>Detalles</h2>
+
+			<div v-if="chatbotStore.selectedNodes.length === 1" class="wrapper">
+				<VTextField
+						label="Nombre"
+						type="text"
+						v-model="detailNode.name"/>
+
+				<h3>Mensaje</h3>
+
+				<VTextField
+						label="Header"
+						type="text"
+						v-model="detail.message.header.value.value"
+						:errorMessages="detail.message.header.errors.value"/>
+
+				<VTextarea
+						label="Mensaje"
+						v-model="detail.message.text.value.value"
+						:errorMessages="detail.message.text.errors.value"/>
+			</div>
+		</div>
+
+		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
+				 viewBox="0 0 640 640">
+			<path
+					fill="currentColor"
+					d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
+		</svg>
+	</div>
+</template>
 
 <style scoped>
 #ChatbotView {
