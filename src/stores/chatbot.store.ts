@@ -6,6 +6,7 @@ import {mergeObjects} from "../utils/core.ts";
 
 export const useChatbotStore = defineStore('chatbot', () => {
 	const {chatbot} = storeToRefs(useAppStore());
+	const appStore = useAppStore();
 
 	const nodes = ref([])
 	const selectedNodes = ref([])
@@ -64,7 +65,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 		mn.data = mergeObjects(mn.data, modifiedNode)
 	}
 
-	fetchNodes()
+	appStore.fetching.promise.then(() => fetchNodes())
 
 	return {
 		chatbot,

@@ -19,3 +19,25 @@ export function mergeObjects<T extends GenericObject>(target: T, source: T): T {
 
 	return result as T;
 }
+
+import {v1} from 'uuid'
+
+export class Defer<T> {
+	resolve!: (value: T) => void
+	reject!: (reject?: unknown) => void
+
+	id = v1()
+
+	promise: Promise<T>
+
+	constructor() {
+		this.promise = new Promise((resolve, reject) => {
+			this.resolve = resolve
+			this.reject = reject
+		});
+
+		// Freeze the Defer instance to prevent modification of its properties.
+		// This ensures the resolve, reject, and promise properties remain immutable after construction.
+		Object.freeze(this);
+	}
+}

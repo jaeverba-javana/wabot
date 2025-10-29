@@ -4,8 +4,6 @@
 import HelloWorld from './ui/components/HelloWorld.vue'
 import {useAppStore} from "@/stores/app.store.ts";
 import ToastContainer from '@/ui/components/ToastContainer.vue'
-
-const appStore = useAppStore()
 </script>
 
 <template>

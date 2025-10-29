@@ -1,33 +1,46 @@
 import {defineStore} from 'pinia'
 import {reactive, Ref, ref} from "vue";
 import {axiosApi} from "../utils/axios.ts";
+import {Defer} from "../utils/core.ts";
 
 interface User {
 	email: string
 }
 
-interface ChatBot {
+interface Chatbot {
 	phoneId: string,
 	phone: string,
 }
 
 export const useAppStore = defineStore("app", () => {
-	const user = ref({})
-	const chatbot = ref({})
+	const fetching = new Defer<{ user: User, chatbot: Chatbot }>();
+	const user = ref({});
+	const chatbot = ref({});
 
-	axiosApi.get('/fetch/accountInfo')
-		.then(({data}) => {
-			user.value = data.message.user
-			chatbot.value = data.message.chatbot
-		}).catch(reason => console.error(reason))
+	const fetch = () =>
+		axiosApi.get('/fetch/accountInfo')
+			.then(({data}) => {
+				fetching.resolve({
+					user: data.message.user,
+					chatbot: data.message.chatbot
+				})
+			}).catch(reason => console.error(reason));
 
-	function setUser(u: User) {
-		user.value = u
-	}
+	const setUser = (u: User) => user.value = u;
 
-	function setChatbot(c: ChatBot) {
-		chatbot.value = c
-	}
+	const setChatbot = (c: ChatBot) => chatbot.value = c;
 
-	return {user, chatbot, setUser, setChatbot}
+	fetching.promise.then((m) => {
+		setUser(m.user)
+		setChatbot(m.chatbot)
+	})
+
+	return {
+		fetching,
+		user,
+		chatbot,
+		fetch,
+		setUser,
+		setChatbot
+	};
 })

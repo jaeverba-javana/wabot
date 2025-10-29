@@ -174,13 +174,10 @@ export default {
 			detailNode,
 			detail
 		}
-	}
-	,
+	},
+
 	methods: {
-		onMouseDown(e
-								:
-								MouseEvent
-		) {
+		onMouseDown(e: MouseEvent) {
 			if (!this.$refs.svg) return;
 			e.preventDefault();
 
@@ -199,12 +196,9 @@ export default {
 					this.chatbotStore.cleanSelectedNodes();
 				}
 			}
-		}
-		,
-		onMouseMove(e
-								:
-								MouseEvent
-		) {
+		},
+
+		onMouseMove(e: MouseEvent) {
 			// If mouse was pressed on a node, only switch to 'moving' when actual movement occurs and button remains pressed
 			if (this.isMouseDownOnNode) {
 				// e.buttons & 1 === 1 means left button is currently pressed
@@ -252,12 +246,9 @@ export default {
 				this.clampOffsets();
 			}
 
-		}
-		,
-		onMouseUp(e
-							:
-							MouseEvent
-		) {
+		},
+
+		onMouseUp(e: MouseEvent) {
 			if (e.button === 1 && this.isPanning) {
 				e.preventDefault();
 				this.isPanning = false;
@@ -271,12 +262,9 @@ export default {
 				}
 				this.isMouseDownOnNode = false;
 			}
-		}
-		,
-		onWheel(e
-						:
-						WheelEvent
-		) {
+		},
+
+		onWheel(e: WheelEvent) {
 			// Zoom only when Ctrl key is pressed
 			if (!e.ctrlKey) return;
 			e.preventDefault();
@@ -304,18 +292,10 @@ export default {
 			this.offsetX = mouseX - (mouseX - this.offsetX) * scaleDiff;
 			this.offsetY = mouseY - (mouseY - this.offsetY) * scaleDiff;
 			this.clampOffsets();
-		}
-		,
+		},
 
 		// Metodo alternativo sin usar getScreenCTM
-		screenToSVGManual(clientX
-											:
-											number, clientY
-											:
-											number, svgElement
-											:
-											SVGSVGElement
-		) {
+		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
 			const x = clientX - rect.left;
@@ -324,19 +304,10 @@ export default {
 			const svgX = (x - this.offsetX) / this.scale;
 			const svgY = (y - this.offsetY) / this.scale;
 			return {x: svgX, y: svgY};
-		}
-		,
-
+		},
 
 		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
-		screenToSVG(screenX
-								:
-								number, screenY
-								:
-								number, svgElement
-								:
-								SVGSVGElement
-		) {
+		screenToSVG(screenX:number, screenY:number, svgElement:SVGSVGElement) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
 				const point = svgElement.createSVGPoint();
@@ -346,8 +317,7 @@ export default {
 				return {x: svgPoint.x, y: svgPoint.y};
 			}
 			return {x: 0, y: 0};
-		}
-		,
+		},
 
 		clampOffsets() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -381,8 +351,7 @@ export default {
 			// } else {
 			this.offsetY = Math.min(Math.max(this.offsetY, minOffsetY), maxOffsetY);
 			// }
-		}
-		,
+		},
 
 		center() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -403,15 +372,9 @@ export default {
 			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
 			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
 
-		}
-		,
+		},
 
-		handleNodeMouseDown(node
-												:
-												any, e
-												:
-												MouseEvent
-		) {
+		handleNodeMouseDown(node:any, e:MouseEvent) {
 			// if (e.button === 0) {
 			// Prepare for potential move, but don't activate until mouse moves
 			this.startMouseX = e.clientX;
@@ -420,14 +383,13 @@ export default {
 			if (!this.chatbotStore.selectedNodes.length)
 				this.chatbotStore.setSelectedNodes(node._id)
 			// }
-		}
-		,
+		},
 
 		stopMoving() {
 
 		}
-	}
-	,
+	},
+
 	mounted() {
 		this.center()
 	}
