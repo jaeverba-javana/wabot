@@ -63,13 +63,13 @@
 					<v-card-title>Configuración del bot</v-card-title>
 					<v-card-text>
 						<v-form ref="botForm">
-<!--							:disabled="appStore.user.phoneNumber && appStore.user.phoneConfirmed"-->
+							<!--							:disabled="appStore.user.phoneNumber && appStore.user.phoneConfirmed"-->
 							<v-text-field
 									type="number"
 									v-model="fields.chatbot.phoneId.value.value"
-									:error-messages="fields.chatbot.phoneId.errorMessage.value"
+									:error-messages="fields.chatbot.phoneId.errorMessages.value"
 									label="Identificador de número de teléfono"
-									:hint="(fields.chatbot.phoneId.errorMessage.value)?
+									:hint="(fields.chatbot.phoneId.errorMessages.value)?
                   'No use espacios' : fields.chatbot.phoneId.value.value?
                   'Todo bien' : 'No use espacios'"
 									required
@@ -77,9 +77,9 @@
 							<v-text-field
 									type="text"
 									v-model="fields.chatbot.token.value.value"
-									:error-messages="fields.chatbot.token.errorMessage.value"
+									:error-messages="fields.chatbot.token.errorMessages.value"
 									label="Token de WhatsApp"
-									:hint="(fields.chatbot.token.errorMessage.value)?
+									:hint="(fields.chatbot.token.errorMessages.value)?
 									'Todo bien':'Token generado en la app de whatsapp de meta'"
 									required
 							/>
@@ -190,7 +190,7 @@
 <script lang="ts">
 import {useField} from "vee-validate";
 import {useAppStore} from "@/stores/app.store.js";
-import {watch} from 'vue'
+import {computed, watch} from 'vue'
 import {axiosApi} from "../../utils/axios.ts";
 import {useToastStore} from '@/stores/toast.store.ts'
 
@@ -207,7 +207,7 @@ export default {
 
 		const appStore = useAppStore()
 
-		const business = {
+		/*const business = {
 			email: useField('businessEmail'),
 			phone: useField("businessPhone", (value: string) => {
 				if (!value || !value.length) return "El campo no puede quedar vacío"
@@ -218,9 +218,9 @@ export default {
 				return true
 			}),
 			otp: useField("businessPhoneOtp")
-		}
+		}*/
 
-		const chatbot = {
+		/*const chatbot = {
 			// email: useField('businessEmail'),
 			phoneId: useField("chatbot.phoneId", (value: string) => {
 				if (!value || !value.length) return "El campo no puede quedar vacío"
@@ -234,13 +234,49 @@ export default {
 
 				return true
 			})
+		}*/
+
+		const business = {
+			email: {
+				value: computed({
+					get: () => appStore.user.email ?? '',
+					set: v => appStore.user.email = v
+				})
+			},
+			phone: {
+				value: computed(() => appStore.user.phone ?? '')
+			}
 		}
 
-		business.email.value.value = appStore.user.email
-		business.phone.value.value = appStore.user.phone
+		const chatbot = {
+			phoneId: {
+				value: computed({
+					get:() => appStore.chatbot.phoneId ?? '',
+					set: v => appStore.chatbot.phoneId = v
+				}),
+				errorMessages: computed(() => {
+					const value = appStore.chatbot.phoneId as string;
+					if (!value || !value.length) return ["El campo no puede quedar vacío"]
+					if (/[^\d]/.test(value)) return ["Por favor solo incluya números"]
+					if (value.length !== 15) return ["El número debe tener 15 caracteres"]
 
-		chatbot.phoneId.value.value = appStore.chatbot.phoneId
-		chatbot.token.value.value = appStore.chatbot.token
+					return []
+				}),
+			},
+			token: {
+				value: computed({
+					get: () => appStore.chatbot.token ?? '',
+					set: v => appStore.chatbot.token = v
+				}),
+				errorMessages: computed(() => {
+					const value = appStore.chatbot.token as string;
+
+					if (!value || !value.length) return ["El campo no puede quedar vacío"]
+
+					return []
+				})
+			}
+		}
 
 		return {
 			fields: {business, chatbot},

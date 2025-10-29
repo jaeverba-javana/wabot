@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {Ref, ref} from "vue";
+import {reactive, Ref, ref} from "vue";
 import {axiosApi} from "../utils/axios.ts";
 
 interface User {
@@ -12,8 +12,8 @@ interface ChatBot {
 }
 
 export const useAppStore = defineStore("app", () => {
-	const user: Ref<undefined, User> = ref(undefined)
-	const chatbot: Ref<undefined, ChatBot> = ref(undefined)
+	const user = ref({})
+	const chatbot = ref({})
 
 	axiosApi.get('/fetch/accountInfo')
 		.then(({data}) => {
