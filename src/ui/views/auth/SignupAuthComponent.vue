@@ -4,6 +4,7 @@ import { useField, useForm } from 'vee-validate'
 // @ts-ignore Working
 import { axiosApi } from '@Utils/axios.ts'
 import {useRouter} from "vue-router";
+import {useToastStore} from "../../../stores/toast.store.ts";
 
 export default defineComponent({
   name: "SignUpAuthComponent",
@@ -79,8 +80,12 @@ export default defineComponent({
             console.log(reason);
             // @ts-ignore
             labels[reason.labels[0]].setErrors("Un usuario ya escribió esto")
-
+						useToastStore().show("El correo ya existe")
+						return
           }
+
+					useToastStore().show("Error desconocido", 'error')
+					console.log('reason:', reason)
         }
       })
     })

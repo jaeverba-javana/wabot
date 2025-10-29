@@ -3,6 +3,7 @@ import {computed, defineComponent, ref} from 'vue'
 import {useField, useForm} from "vee-validate";
 import { axiosApi } from '../../../utils/axios';
 import { useRouter } from 'vue-router';
+import {useToastStore} from "../../../stores/toast.store.ts";
 
 
 
@@ -53,6 +54,8 @@ export default defineComponent({
         
       }).catch((r: any) => {
         isLoading.value = false
+				useToastStore().show("Correo o contraseña incorrecto", 'error')
+				console.log(r)
       })
 
       // email.value.value = ''
