@@ -1,7 +1,7 @@
 import {Router} from "express";
 import {authenticate} from "./auth.js";
 
-import {FlowNode} from "../db/mongoDb/models/flowNode.model.js";
+import {FlowNode} from "../db/mongoDb/models/index.js";
 
 const router = Router()
 
@@ -29,7 +29,7 @@ export default Router()
 						promises.push(FlowNode.updateOne({_id: node._id}, node))
 					})
 
-					await Promise.all(promises)
+					const statuses = await Promise.allSettled(promises)
 					
 					res.send({message: 'ok'})
 

@@ -72,13 +72,23 @@ userSchema.index({username: 1}, {
 		"username": {$exists: true}
 	}
 })
-
 userSchema.index({phoneNumber: 1}, {
 	unique: true,
 	partialFilterExpression: {
 		"phoneId": {$exists: true}
 	}
 })
+
+userSchema.set('toJSON', {
+	versionKey: false,
+	transform: (doc, ret) => {
+		delete ret.password;
+		delete ret._id;
+		if (ret.username) delete ret.username;
+		return ret;
+	}
+});
+
 
 /*
 [
