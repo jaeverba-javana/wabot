@@ -1,16 +1,18 @@
 import {defineStore, storeToRefs} from "pinia";
 import {useAppStore} from "./app.store.ts";
 import {axiosApi} from "../utils/axios.ts";
-import {computed, ref} from "vue";
+import {computed, Ref, ref} from "vue";
 import {mergeObjects} from "../utils/core.ts";
+
+type PFlowNode = Partial<FlowNode> & {_id: string}
 
 export const useChatbotStore = defineStore('chatbot', () => {
 	const {chatbot} = storeToRefs(useAppStore());
 	const appStore = useAppStore();
 
-	const nodes = ref([])
-	const selectedNodes = ref([])
-	const modifiedNodes = []
+	const nodes = ref<FlowNode[]>([])
+	const selectedNodes = ref<string[]>([])
+	const modifiedNodes: {timer: number, data: PFlowNode}[] = []
 	const detailNode = computed(() => {
 
 	})
@@ -26,7 +28,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	const cleanSelectedNodes = () => selectedNodes.value = []
 	const updateSelectedNodesPosition = () => {
 		const newNodesPositions = selectedNodes.value.map(value => {
-			const v = nodes.value.find(i => i._id === value)
+			const v = nodes.value.find(i => i._id === value)!
 			return {
 				_id: v._id,
 				metadata: {
@@ -43,7 +45,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 			}).catch(reason => console.error(reason))
 	}
 
-	const updateNode = (modifiedNode) => {
+	const updateNode = (modifiedNode: PFlowNode) => {
 		const modifiedNodeIndex = modifiedNodes.findIndex(v => v.data._id === modifiedNode._id)
 		const action = () => {
 			const mni = modifiedNodes.findIndex(v => v.data._id === modifiedNode._id)

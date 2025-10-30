@@ -25,47 +25,49 @@ export default {
 	setup() {
 		const chatbotStore = useChatbotStore();
 
-		const detailNode = computed(() => {
-				console.log('tamos')
-				if (chatbotStore.selectedNodes.length === 1) {
-					return chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
-				}
-				return undefined
-			}
+		const detailNode = computed((): FlowNode | undefined =>
+			(chatbotStore.selectedNodes.length === 1)
+				? chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
+				: undefined
 		)
 
 		const detail = {
 			name: computed({
-				get() {
-					return detailNode.value?.name ?? '';
-				},
-				set(v) {
-					detailNode.value.name = v;
-				},
+				get: () => detailNode.value?.name ?? '',
+				set: (v: string) => detailNode.value
+					? detailNode.value.name = v
+					: undefined
 			}),
 			message: {
 				header: {
 					value: computed({
 						get: () => detailNode.value?.message.header,
-						set: v => detailNode.value.message.header = v,
+						set: (v: string) => detailNode.value
+							? detailNode.value.message.header = v
+							: undefined
 					}),
 					errors: computed((): string[] => {
 						if (!detailNode.value) return [];
+
 						const errors: string[] = [];
-						if (detailNode.value.message.header.length > 100)
+						if (detailNode.value.message.header?.trim().length > 100)
 							errors.push('Demasiado largo...')
 
 						chatbotStore.updateNode({
 							_id: detailNode.value._id,
-							message: {header: detailNode.value.message.header}
+							message: detailNode.value.message
 						});
+
 						return errors;
 					})
 				},
+
 				text: {
 					value: computed({
 						get: () => detailNode.value?.message.text ?? '',
-						set: v => detailNode.value.message.text = v,
+						set: (v: string) => detailNode.value
+							? detailNode.value.message.text = v.replace(/^\n+|\n+$/g, '').trim()
+							: undefined,
 					}),
 					errors: computed((): string[] => {
 						if (!detailNode.value) return [];
@@ -75,7 +77,7 @@ export default {
 
 						chatbotStore.updateNode({
 							_id: detailNode.value._id,
-							message: {text: detailNode.value.message.text}
+							message: detailNode.value.message
 						});
 						return errors;
 					})
@@ -94,7 +96,10 @@ export default {
 	},
 
 	methods: {
-		onMouseDown(e: MouseEvent) {
+		onMouseDown(e
+								:
+								MouseEvent
+		) {
 			if (!this.$refs.svg) return;
 			e.preventDefault();
 
@@ -113,9 +118,13 @@ export default {
 					this.chatbotStore.cleanSelectedNodes();
 				}
 			}
-		},
+		}
+		,
 
-		onMouseMove(e: MouseEvent) {
+		onMouseMove(e
+								:
+								MouseEvent
+		) {
 			// If mouse was pressed on a node, only switch to 'moving' when actual movement occurs and button remains pressed
 			if (this.isMouseDownOnNode) {
 				// e.buttons & 1 === 1 means left button is currently pressed
@@ -163,9 +172,13 @@ export default {
 				this.clampOffsets();
 			}
 
-		},
+		}
+		,
 
-		onMouseUp(e: MouseEvent) {
+		onMouseUp(e
+							:
+							MouseEvent
+		) {
 			if (e.button === 1 && this.isPanning) {
 				e.preventDefault();
 				this.isPanning = false;
@@ -179,9 +192,13 @@ export default {
 				}
 				this.isMouseDownOnNode = false;
 			}
-		},
+		}
+		,
 
-		onWheel(e: WheelEvent) {
+		onWheel(e
+						:
+						WheelEvent
+		) {
 			// Zoom only when Ctrl key is pressed
 			if (!e.ctrlKey) return;
 			e.preventDefault();
@@ -209,10 +226,18 @@ export default {
 			this.offsetX = mouseX - (mouseX - this.offsetX) * scaleDiff;
 			this.offsetY = mouseY - (mouseY - this.offsetY) * scaleDiff;
 			this.clampOffsets();
-		},
+		}
+		,
 
 		// Metodo alternativo sin usar getScreenCTM
-		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
+		screenToSVGManual(clientX
+											:
+											number, clientY
+											:
+											number, svgElement
+											:
+											SVGSVGElement
+		) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
 			const x = clientX - rect.left;
@@ -221,10 +246,18 @@ export default {
 			const svgX = (x - this.offsetX) / this.scale;
 			const svgY = (y - this.offsetY) / this.scale;
 			return {x: svgX, y: svgY};
-		},
+		}
+		,
 
 		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
-		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
+		screenToSVG(screenX
+								:
+								number, screenY
+								:
+								number, svgElement
+								:
+								SVGSVGElement
+		) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
 				const point = svgElement.createSVGPoint();
@@ -234,7 +267,8 @@ export default {
 				return {x: svgPoint.x, y: svgPoint.y};
 			}
 			return {x: 0, y: 0};
-		},
+		}
+		,
 
 		clampOffsets() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -268,7 +302,8 @@ export default {
 			// } else {
 			this.offsetY = Math.min(Math.max(this.offsetY, minOffsetY), maxOffsetY);
 			// }
-		},
+		}
+		,
 
 		center() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -289,9 +324,15 @@ export default {
 			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
 			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
 
-		},
+		}
+		,
 
-		handleNodeMouseDown(node: any, e: MouseEvent) {
+		handleNodeMouseDown(node
+												:
+												any, e
+												:
+												MouseEvent
+		) {
 			// if (e.button === 0) {
 			// Prepare for potential move, but don't activate until mouse moves
 			this.startMouseX = e.clientX;
@@ -300,7 +341,8 @@ export default {
 			if (!this.chatbotStore.selectedNodes.length)
 				this.chatbotStore.setSelectedNodes(node._id)
 			// }
-		},
+		}
+		,
 
 		stopMoving() {
 
@@ -309,8 +351,7 @@ export default {
 
 	mounted() {
 		this.center()
-	}
-	,
+	},
 	beforeUpdate() {
 		// this.center()
 	}
@@ -360,6 +401,34 @@ export default {
 							<feMergeNode in="SourceGraphic"/>
 						</feMerge>
 					</filter>
+
+					<filter id="elevation2" x="-100%" y="-100%" width="300%" height="300%">
+						<!-- Primera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1"/>
+						<feGaussianBlur in="offset1" stdDeviation="3" result="blur1"/>
+						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
+						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
+
+						<!-- Segunda sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset2"/>
+						<feGaussianBlur in="offset2" stdDeviation="4" result="blur2"/>
+						<feFlood flood-color="rgba(0, 0, 255, 0.14)" result="color2"/>
+						<feComposite in="color2" in2="blur2" operator="in" result="shadow2"/>
+
+						<!-- Tercera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="1" result="offset3"/>
+						<feGaussianBlur in="offset3" stdDeviation="8" result="blur3"/>
+						<feFlood flood-color="rgba(0, 255, 0, 0.12)" result="color3"/>
+						<feComposite in="color3" in2="blur3" operator="in" result="shadow3"/>
+
+						<!-- Combinar todas las sombras -->
+						<feMerge>
+							<feMergeNode in="shadow2"/>
+							<feMergeNode in="shadow1"/>
+							<feMergeNode in="shadow3"/>
+							<feMergeNode in="SourceGraphic"/>
+						</feMerge>
+					</filter>
 				</defs>
 
 				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
@@ -373,7 +442,7 @@ export default {
 				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
 											 :node="item" @mousedown="event =>
 											 handleNodeMouseDown(item, event)"
-											 :selected="chatbotStore.selectedNodes.includes(item._id)"/>
+											 :selected="chatbotStore.selectedNodes.includes(item._id!)"/>
 			</g>
 		</svg>
 
@@ -385,6 +454,8 @@ export default {
 						label="Nombre"
 						type="text"
 						v-model="detailNode.name"/>
+
+				<VDivider />
 
 				<h3>Mensaje</h3>
 

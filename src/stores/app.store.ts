@@ -1,21 +1,12 @@
 import {defineStore} from 'pinia'
-import {reactive, Ref, ref} from "vue";
+import {ref} from "vue";
 import {axiosApi} from "../utils/axios.ts";
 import {Defer} from "../utils/core.ts";
 
-interface User {
-	email: string
-}
-
-interface Chatbot {
-	phoneId: string,
-	phone: string,
-}
-
 export const useAppStore = defineStore("app", () => {
 	const fetching = new Defer<{ user: User, chatbot: Chatbot }>();
-	const user = ref({});
-	const chatbot = ref({});
+	const user = ref<User | {}>({});
+	const chatbot = ref<Chatbot>({});
 
 	const fetch = () =>
 		axiosApi.get('/fetch/accountInfo')
@@ -28,7 +19,7 @@ export const useAppStore = defineStore("app", () => {
 
 	const setUser = (u: User) => user.value = u;
 
-	const setChatbot = (c: ChatBot) => chatbot.value = c;
+	const setChatbot = (c: Chatbot) => chatbot.value = c;
 
 	fetching.promise.then((m) => {
 		setUser(m.user)

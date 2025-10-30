@@ -1,10 +1,10 @@
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, PropType} from 'vue'
 
 export default defineComponent({
 	name: "MessageCanvas",
 	props: {
-		node: {type: Object, required: true},
+		node: {type: Object as PropType<FlowNode>, required: true},
 		selected: {type: Boolean, default: false},
 	},
 	emits: ['mousedown'],
