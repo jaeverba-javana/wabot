@@ -27,7 +27,10 @@ export default {
 
 		const detailNode = computed((): FlowNode | undefined =>
 			(chatbotStore.selectedNodes.length === 1)
-				? chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
+				?
+				chatbotStore.modifiedNodes
+					.find(i => i._id === chatbotStore.selectedNodes[0]) ??
+				chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
 				: undefined
 		)
 
@@ -42,9 +45,16 @@ export default {
 				header: {
 					value: computed({
 						get: () => detailNode.value?.message.header,
-						set: (v: string) => detailNode.value
-							? detailNode.value.message.header = v
-							: undefined
+						set: (v: string) => {
+							if (detailNode.value) {
+								chatbotStore.updateNode({
+									_id: detailNode.value._id,
+									message: {
+										header: v.trim()
+									}
+								})
+							}
+						}
 					}),
 					errors: computed((): string[] => {
 						if (!detailNode.value) return [];
@@ -53,11 +63,6 @@ export default {
 						if (detailNode.value.message.header?.trim().length > 100)
 							errors.push('Demasiado largo...')
 
-						chatbotStore.updateNode({
-							_id: detailNode.value._id,
-							message: detailNode.value.message
-						});
-
 						return errors;
 					})
 				},
@@ -65,9 +70,16 @@ export default {
 				text: {
 					value: computed({
 						get: () => detailNode.value?.message.text ?? '',
-						set: (v: string) => detailNode.value
-							? detailNode.value.message.text = v.replace(/^\n+|\n+$/g, '').trim()
-							: undefined,
+						set: (v: string) => {
+							if (detailNode.value) {
+								chatbotStore.updateNode({
+									_id: detailNode.value._id,
+									message: {
+										text: v.replace(/^\n+|\n+$/g, '').trim()
+									}
+								})
+							}
+						}
 					}),
 					errors: computed((): string[] => {
 						if (!detailNode.value) return [];
@@ -75,10 +87,6 @@ export default {
 						if (!detailNode.value.message.text)
 							errors.push('El mensaje es requerido');
 
-						chatbotStore.updateNode({
-							_id: detailNode.value._id,
-							message: detailNode.value.message
-						});
 						return errors;
 					})
 				}
@@ -430,11 +438,6 @@ export default {
 						</feMerge>
 					</filter>
 				</defs>
-
-				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
-					<feDropShadow dx="8" dy="8" stdDeviation="4"
-												flood-color="blue" flood-opacity="0.4"/>
-				</filter>
 			</defs>
 
 			<g ref="content"
@@ -442,33 +445,52 @@ export default {
 				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
 											 :node="item" @mousedown="event =>
 											 handleNodeMouseDown(item, event)"
-											 :selected="chatbotStore.selectedNodes.includes(item._id!)"/>
+											 :selected="chatbotStore.selectedNodes.includes(item._id!)"
+											 :isModified="chatbotStore.modifiedNodeIds.includes(item._id!)"
+				/>
 			</g>
 		</svg>
 
 		<div class="details">
 			<h2>Detalles</h2>
 
-			<div v-if="chatbotStore.selectedNodes.length === 1" class="wrapper">
-				<VTextField
-						label="Nombre"
-						type="text"
-						v-model="detailNode.name"/>
+			<div class="wrapper">
+				<template v-if="chatbotStore.selectedNodes.length === 1">
+					<VTextField
+							label="Nombre"
+							type="text"
+							v-model="detailNode!.name"/>
 
-				<VDivider />
+					<VDivider/>
 
-				<h3>Mensaje</h3>
+					<h3>Mensaje</h3>
 
-				<VTextField
-						label="Header"
-						type="text"
-						v-model="detail.message.header.value.value"
-						:errorMessages="detail.message.header.errors.value"/>
+					<VTextField
+							label="Header"
+							type="text"
+							v-model="detail.message.header.value.value"
+							:errorMessages="detail.message.header.errors.value"/>
 
-				<VTextarea
-						label="Mensaje"
-						v-model="detail.message.text.value.value"
-						:errorMessages="detail.message.text.errors.value"/>
+					<VTextarea
+							label="Mensaje"
+							v-model="detail.message.text.value.value"
+							:errorMessages="detail.message.text.errors.value"/>
+				</template>
+			</div>
+
+			<div style="display: flex;justify-content: end; gap:.5rem;">
+				<VBtn density="compact" elevation="1" text="cancelar"
+							:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'')"
+							variant="text"
+							color="error"
+							@click="chatbotStore.deleteUpdatedNode( detailNode? detailNode._id:'')"
+				/>
+				<VBtn density="compact" elevation="1" text="guardar"
+							:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'')"
+							@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
+				/>
 			</div>
 		</div>
 

@@ -4,7 +4,7 @@ import {axiosApi} from "../utils/axios.ts";
 import {computed, Ref, ref} from "vue";
 import {mergeObjects} from "../utils/core.ts";
 
-type PFlowNode = Partial<FlowNode> & {_id: string}
+type PFlowNode = Partiall<FlowNode> & { _id: string }
 
 export const useChatbotStore = defineStore('chatbot', () => {
 	const {chatbot} = storeToRefs(useAppStore());
@@ -12,10 +12,53 @@ export const useChatbotStore = defineStore('chatbot', () => {
 
 	const nodes = ref<FlowNode[]>([])
 	const selectedNodes = ref<string[]>([])
-	const modifiedNodes: {timer: number, data: PFlowNode}[] = []
-	const detailNode = computed(() => {
+	const _modifiedNodes = ref<PFlowNode[]>([])
 
-	})
+	function getDifferentFields<T>(original: T | unknown, changes: Partial<T> | unknown): Partial<T> | undefined {
+		// Si changes no es un objeto válido, retornar undefined
+		if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
+			return undefined;
+		}
+
+		const differences: Partial<T> = {};
+		let hasDifferences = false;
+
+		// Iterar sobre cada propiedad en el objeto changes
+		for (const key in changes) {
+			if (!changes.hasOwnProperty(key)) continue;
+
+			const originalValue = original[key];
+			const changesValue = changes[key];
+
+			// Verificar si ambos valores son objetos (y no null o arrays)
+			const isOriginalObject = originalValue !== null &&
+				typeof originalValue === 'object' &&
+				!Array.isArray(originalValue);
+			const isChangesObject = changesValue !== null &&
+				typeof changesValue === 'object' &&
+				!Array.isArray(changesValue);
+
+			// Si ambos son objetos, comparar recursivamente
+			if (isOriginalObject && isChangesObject) {
+				const nestedDifferences = getDifferentFields(originalValue, changesValue);
+
+				if (nestedDifferences !== undefined) {
+					differences[key] = nestedDifferences;
+					hasDifferences = true;
+				}
+			}
+			// Para valores primitivos, arrays, null, o cuando uno es objeto y otro no
+			else {
+				// Comparación estricta
+				if (JSON.stringify(originalValue) !== JSON.stringify(changesValue)) {
+					differences[key] = changesValue;
+					hasDifferences = true;
+				}
+			}
+		}
+
+		return hasDifferences ? differences : undefined;
+	}
 
 	const fetchNodes = (): void => {
 		axiosApi.get(`/node/byChatbotId/${chatbot.value._id}`)
@@ -23,6 +66,19 @@ export const useChatbotStore = defineStore('chatbot', () => {
 				nodes.value = data.message
 			}).catch(reason => console.error(reason));
 	}
+
+	const modifiedNodeIds = computed<string[]>(() =>
+		_modifiedNodes.value.map(v => v._id))
+
+	const modifiedNodes = computed<FlowNode[]>((): FlowNode[] =>
+		_modifiedNodes.value.map(v => {
+			const cN = nodes.value.find(n => n._id === v._id)
+
+			if (!cN) return v as FlowNode
+
+			return mergeObjects(cN, v) as FlowNode
+		})
+	)
 
 	const setSelectedNodes = (nodeId: string) => selectedNodes.value = [nodeId]
 	const cleanSelectedNodes = () => selectedNodes.value = []
@@ -46,27 +102,43 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	}
 
 	const updateNode = (modifiedNode: PFlowNode) => {
-		const modifiedNodeIndex = modifiedNodes.findIndex(v => v.data._id === modifiedNode._id)
-		const action = () => {
-			const mni = modifiedNodes.findIndex(v => v.data._id === modifiedNode._id)
-			clearTimeout(modifiedNodes[mni].timer)
-			console.log(modifiedNodes[mni].data)
-			axiosApi.patch('/nodes', [modifiedNodes[mni].data])
-				.then(value => console.log('updated node: ', value))
-			modifiedNodes.splice(mni, 1)
-		}
-		// console.log(modifiedNodeIndex)
-		if (modifiedNodeIndex === -1) {
-			const timer = setTimeout(action, 2000)
+		const index = _modifiedNodes.value.findIndex(v => v._id === modifiedNode._id)
 
-			modifiedNodes.push({timer, data: modifiedNode})
-			return
+		if (index === -1) {
+			_modifiedNodes.value.push(modifiedNode as PFlowNode);
+			return;
 		}
 
-		const mn = modifiedNodes[modifiedNodeIndex]
-		clearTimeout(mn.timer)
-		mn.timer = setTimeout(action, 2000)
-		mn.data = mergeObjects(mn.data, modifiedNode)
+		const modifications = getDifferentFields(
+			nodes.value!.find(v => v._id === modifiedNode._id)!,
+			modifiedNode
+		)
+
+		if (!modifications) {
+			_modifiedNodes.value.splice(index, 1);
+			return;
+		}
+
+		_modifiedNodes.value[index] = mergeObjects(
+			_modifiedNodes.value[index],
+			modifications as FlowNode
+		)
+	}
+
+	const deleteUpdatedNode = (nodeId: string) => {
+		const index = _modifiedNodes.value.findIndex(v => v._id === nodeId)
+		if (index !== -1) {
+			_modifiedNodes.value.splice(index, 1)
+		}
+	}
+
+	const updateModifiedNode = (nodeId: string) => {
+		const index = _modifiedNodes.value.findIndex(v => v._id === nodeId)
+		if (index !== -1) {
+			axiosApi.patch('/node', modifiedNodes.value.find(v => v._id === nodeId)!)
+				.then(value => console.log('updated node: ', value, 'nodeId:', nodeId))
+				.catch(reason => console.error(reason))
+		}
 	}
 
 	appStore.fetching.promise.then(() => fetchNodes())
@@ -76,10 +148,15 @@ export const useChatbotStore = defineStore('chatbot', () => {
 		nodes,
 		selectedNodes,
 
+		modifiedNodeIds,
+		modifiedNodes,
+
 		setSelectedNodes,
 		cleanSelectedNodes,
 		updateSelectedNodesPosition,
 
-		updateNode
+		updateNode,
+		deleteUpdatedNode,
+		updateModifiedNode,
 	}
 })

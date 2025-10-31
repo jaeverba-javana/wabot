@@ -4,7 +4,7 @@ import {mdiLogout} from "@mdi/js";
 import SVGIcon from '@jamescoyle/vue-icon/lib/svg-icon.vue'
 import {useAppStore} from "../../stores/app.store.ts";
 
-export default defineComponent({
+export default {
 	name: "HomeLayout",
 	components: {SVGIcon},
 	data() {
@@ -35,7 +35,7 @@ export default defineComponent({
 			window.location.reload();
 		}
 	}
-})
+}
 </script>
 
 <template>
@@ -83,6 +83,6 @@ export default defineComponent({
 
 <style scoped>
 .v-main {
-	min-height: 100dvh;
+	height: 100dvh;
 }
 </style>

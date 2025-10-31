@@ -29,4 +29,8 @@ export declare global {
 	export interface User {
 		email?: string;
 	}
+
+	type Partiall<T> = {
+		[P in keyof T]?: T[P] extends object ? Partiall<T[P]> : T[P]
+	}
 }

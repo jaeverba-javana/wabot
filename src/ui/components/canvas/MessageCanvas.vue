@@ -6,6 +6,7 @@ export default defineComponent({
 	props: {
 		node: {type: Object as PropType<FlowNode>, required: true},
 		selected: {type: Boolean, default: false},
+		isModified: {type: Boolean, default: false}
 	},
 	emits: ['mousedown'],
 	data: () => ({
@@ -44,6 +45,7 @@ export default defineComponent({
 	},
 	computed: {
 		status() {
+			// if (this.isModified) return 'modified'
 			if (this.selected) return 'selected'
 			if (this.hovered) return 'hovered'
 			return 'default'
@@ -59,8 +61,10 @@ export default defineComponent({
 					ref="nodeRect"
 					:x="node.metadata.positionX" :y="node.metadata.positionY"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
-					:stroke="status === 'selected'? '#4fd479' : '#a5a5a5'"
-					stroke-width="2" fill="white"
+					:stroke=" isModified? '#ffbf5f' :
+					status === 'selected'? '#4fd479' :
+					'#a5a5a5'"
+					:stroke-width="status === 'selected'? 2 : 1" fill="white"
 					:filter="(this.status === 'hovered' || this.status === 'selected') ? 'url(#elevation3)' : ''"/>
 
 			<text :x="node.metadata.positionX + 5"
