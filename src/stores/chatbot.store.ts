@@ -10,7 +10,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	const {chatbot} = storeToRefs(useAppStore());
 	const appStore = useAppStore();
 
-	const nodes = ref<FlowNode[]>([])
+	const nodes = ref<(FlowNodeBody & FlowNode)[]>([])
 	const selectedNodes = ref<string[]>([])
 	const _modifiedNodes = ref<PFlowNode[]>([])
 
@@ -20,7 +20,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 			return undefined;
 		}
 
-		const differences: Partial<T> = {};
+		const differences: Partial<T> & { _id: undefined } = {};
 		let hasDifferences = false;
 
 		// Iterar sobre cada propiedad en el objeto changes
@@ -135,7 +135,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	const updateModifiedNode = (nodeId: string) => {
 		const index = _modifiedNodes.value.findIndex(v => v._id === nodeId)
 		if (index !== -1) {
-			axiosApi.patch('/node', modifiedNodes.value.find(v => v._id === nodeId)!)
+			axiosApi.patch('/node', _modifiedNodes.value[index])
 				.then(value => console.log('updated node: ', value, 'nodeId:', nodeId))
 				.catch(reason => console.error(reason))
 		}

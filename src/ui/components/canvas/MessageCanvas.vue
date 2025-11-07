@@ -49,6 +49,9 @@ export default defineComponent({
 			if (this.selected) return 'selected'
 			if (this.hovered) return 'hovered'
 			return 'default'
+		},
+		isSaved() {
+			return this.node._id
 		}
 	}
 })
@@ -61,7 +64,8 @@ export default defineComponent({
 					ref="nodeRect"
 					:x="node.metadata.positionX" :y="node.metadata.positionY"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
-					:stroke=" isModified? '#ffbf5f' :
+					:stroke=" !isSaved? '#ff5f5f' :
+					isModified? '#ffbf5f' :
 					status === 'selected'? '#4fd479' :
 					'#a5a5a5'"
 					:stroke-width="status === 'selected'? 2 : 1" fill="white"

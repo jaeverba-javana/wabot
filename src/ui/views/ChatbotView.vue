@@ -27,71 +27,95 @@ export default {
 
 		const detailNode = computed((): FlowNode | undefined =>
 			(chatbotStore.selectedNodes.length === 1)
-				?
-				chatbotStore.modifiedNodes
+				? chatbotStore.modifiedNodes
 					.find(i => i._id === chatbotStore.selectedNodes[0]) ??
 				chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
 				: undefined
 		)
 
 		const detail = {
-			name: computed({
-				get: () => detailNode.value?.name ?? '',
-				set: (v: string) => detailNode.value
-					? detailNode.value.name = v
-					: undefined
-			}),
-			message: {
-				header: {
-					value: computed({
-						get: () => detailNode.value?.message.header,
-						set: (v: string) => {
-							if (detailNode.value) {
-								chatbotStore.updateNode({
-									_id: detailNode.value._id,
-									message: {
-										header: v.trim()
-									}
-								})
-							}
+			name: {
+				value: computed({
+					get: () => detailNode.value?.name ?? '',
+					set: (v: string) => {
+						if (detailNode.value) {
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								name: v
+							})
 						}
-					}),
-					errors: computed((): string[] => {
-						if (!detailNode.value) return [];
-
-						const errors: string[] = [];
-						if (detailNode.value.message.header?.trim().length > 100)
-							errors.push('Demasiado largo...')
-
-						return errors;
-					})
-				},
-
-				text: {
-					value: computed({
-						get: () => detailNode.value?.message.text ?? '',
-						set: (v: string) => {
-							if (detailNode.value) {
-								chatbotStore.updateNode({
-									_id: detailNode.value._id,
-									message: {
-										text: v.replace(/^\n+|\n+$/g, '').trim()
-									}
-								})
-							}
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
+					const errors: string[] = [];
+					if (!detailNode.value.name)
+						errors.push('El nombre es requerido');
+					return errors;
+				})
+			},
+			'message.header': {
+				value: computed({
+					get: () => detailNode.value?.message.header,
+					set: (v: string) => {
+						if (detailNode.value) {
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								message: {
+									header: v//.trim()
+								}
+							})
 						}
-					}),
-					errors: computed((): string[] => {
-						if (!detailNode.value) return [];
-						const errors: string[] = [];
-						if (!detailNode.value.message.text)
-							errors.push('El mensaje es requerido');
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
 
-						return errors;
-					})
-				}
-			}
+					const errors: string[] = [];
+					if (detailNode.value.message.header?.trim().length > 100)
+						errors.push('Demasiado largo...')
+
+					return errors;
+				})
+			},
+			'message.text': {
+				value: computed({
+					get: () => detailNode.value?.message.text ?? '',
+					set: (v: string) => {
+						if (detailNode.value) {
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								message: {
+									text: v//.replace(/^\n+|\n+$/g, '').trim()
+								}
+							})
+						}
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
+					const errors: string[] = [];
+					if (!detailNode.value.message.text)
+						errors.push('El mensaje es requerido');
+
+					return errors;
+				})
+			},
 		}
+
+		const hasErrors = computed((): boolean => {
+			if (!detail) return false;
+
+			let r = false
+
+			Object.keys(detail).forEach((v: string) => {
+				const i = detail[v].errors.value;
+
+				if (i.length > 0) r = true
+			})
+
+			return r
+		})
 
 		return {
 			minScale: 0.2 as number,
@@ -99,15 +123,13 @@ export default {
 			zoomIntensity: 0.0015 as number, // tune sensitivity
 			chatbotStore,
 			detailNode,
-			detail
+			detail,
+			hasErrors
 		}
 	},
 
 	methods: {
-		onMouseDown(e
-								:
-								MouseEvent
-		) {
+		onMouseDown(e: MouseEvent) {
 			if (!this.$refs.svg) return;
 			e.preventDefault();
 
@@ -126,13 +148,9 @@ export default {
 					this.chatbotStore.cleanSelectedNodes();
 				}
 			}
-		}
-		,
+		},
 
-		onMouseMove(e
-								:
-								MouseEvent
-		) {
+		onMouseMove(e: MouseEvent) {
 			// If mouse was pressed on a node, only switch to 'moving' when actual movement occurs and button remains pressed
 			if (this.isMouseDownOnNode) {
 				// e.buttons & 1 === 1 means left button is currently pressed
@@ -180,13 +198,9 @@ export default {
 				this.clampOffsets();
 			}
 
-		}
-		,
+		},
 
-		onMouseUp(e
-							:
-							MouseEvent
-		) {
+		onMouseUp(e: MouseEvent) {
 			if (e.button === 1 && this.isPanning) {
 				e.preventDefault();
 				this.isPanning = false;
@@ -200,13 +214,9 @@ export default {
 				}
 				this.isMouseDownOnNode = false;
 			}
-		}
-		,
+		},
 
-		onWheel(e
-						:
-						WheelEvent
-		) {
+		onWheel(e: WheelEvent) {
 			// Zoom only when Ctrl key is pressed
 			if (!e.ctrlKey) return;
 			e.preventDefault();
@@ -234,17 +244,13 @@ export default {
 			this.offsetX = mouseX - (mouseX - this.offsetX) * scaleDiff;
 			this.offsetY = mouseY - (mouseY - this.offsetY) * scaleDiff;
 			this.clampOffsets();
-		}
-		,
+		},
 
 		// Metodo alternativo sin usar getScreenCTM
-		screenToSVGManual(clientX
-											:
-											number, clientY
-											:
-											number, svgElement
-											:
-											SVGSVGElement
+		screenToSVGManual(
+			clientX: number,
+			clientY: number,
+			svgElement: SVGSVGElement
 		) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
@@ -254,18 +260,10 @@ export default {
 			const svgX = (x - this.offsetX) / this.scale;
 			const svgY = (y - this.offsetY) / this.scale;
 			return {x: svgX, y: svgY};
-		}
-		,
+		},
 
 		// Metodo para convertir coordenadas de pantalla a coordenadas SVG
-		screenToSVG(screenX
-								:
-								number, screenY
-								:
-								number, svgElement
-								:
-								SVGSVGElement
-		) {
+		screenToSVG(screenX: number, screenY: number, svgElement: SVGSVGElement) {
 			const CTM = svgElement.getScreenCTM();
 			if (CTM) {
 				const point = svgElement.createSVGPoint();
@@ -275,8 +273,7 @@ export default {
 				return {x: svgPoint.x, y: svgPoint.y};
 			}
 			return {x: 0, y: 0};
-		}
-		,
+		},
 
 		clampOffsets() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -310,8 +307,7 @@ export default {
 			// } else {
 			this.offsetY = Math.min(Math.max(this.offsetY, minOffsetY), maxOffsetY);
 			// }
-		}
-		,
+		},
 
 		center() {
 			const svg = (this.$refs.svg as SVGSVGElement | undefined);
@@ -332,25 +328,22 @@ export default {
 			this.offsetX = (viewWidth - scaledW) / 2 - this.scale * bbox.x;
 			this.offsetY = (viewHeight - scaledH) / 2 - this.scale * bbox.y;
 
-		}
-		,
+		},
 
-		handleNodeMouseDown(node
-												:
-												any, e
-												:
-												MouseEvent
-		) {
+		handleNodeMouseDown(node: any, e: MouseEvent) {
 			// if (e.button === 0) {
 			// Prepare for potential move, but don't activate until mouse moves
 			this.startMouseX = e.clientX;
 			this.startMouseY = e.clientY;
 			this.isMouseDownOnNode = true;
-			if (!this.chatbotStore.selectedNodes.length)
-				this.chatbotStore.setSelectedNodes(node._id)
+			if (!this.chatbotStore.selectedNodes.length) {
+				this.chatbotStore.setSelectedNodes(node._id);
+				return;
+			}
+
+			this.chatbotStore.setSelectedNodes(node._id);
 			// }
-		}
-		,
+		},
 
 		stopMoving() {
 
@@ -442,11 +435,11 @@ export default {
 
 			<g ref="content"
 				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
-				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
-											 :node="item" @mousedown="event =>
-											 handleNodeMouseDown(item, event)"
-											 :selected="chatbotStore.selectedNodes.includes(item._id!)"
-											 :isModified="chatbotStore.modifiedNodeIds.includes(item._id!)"
+				<MessageCanvas
+						v-for="item in chatbotStore.nodes" :key="item._id"
+						:node="item" @mousedown="event => handleNodeMouseDown(item, event)"
+						:selected="chatbotStore.selectedNodes.includes(item._id!)"
+						:isModified="chatbotStore.modifiedNodeIds.includes(item._id!)"
 				/>
 			</g>
 		</svg>
@@ -459,7 +452,9 @@ export default {
 					<VTextField
 							label="Nombre"
 							type="text"
-							v-model="detailNode!.name"/>
+							v-model="detail.name.value.value"
+							:errorMessages="detail.name.errors.value"
+					/>
 
 					<VDivider/>
 
@@ -468,29 +463,40 @@ export default {
 					<VTextField
 							label="Header"
 							type="text"
-							v-model="detail.message.header.value.value"
-							:errorMessages="detail.message.header.errors.value"/>
+							v-model="detail['message.header'].value.value"
+							:errorMessages="detail['message.header'].errors.value"/>
 
 					<VTextarea
 							label="Mensaje"
-							v-model="detail.message.text.value.value"
-							:errorMessages="detail.message.text.errors.value"/>
+							v-model="detail['message.text'].value.value"
+							:errorMessages="detail['message.text'].errors.value"/>
 				</template>
 			</div>
 
 			<div style="display: flex;justify-content: end; gap:.5rem;">
-				<VBtn density="compact" elevation="1" text="cancelar"
-							:disabled="!chatbotStore.modifiedNodeIds.includes(
-								detailNode? detailNode._id:'')"
+				<!--				<template-->
+				<!--						v-if="detailNode && !detailNode._id"-->
+				<!--				></template>-->
+
+				<!--				<template v-else>-->
+				<VBtn density="compact" elevation="1" :text="(detailNode &&
+				!detailNode._id)? 'Eliminar' :'cancelar'"
+							:disabled="!(detailNode && !detailNode._id) &&
+							(!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:''))"
 							variant="text"
 							color="error"
 							@click="chatbotStore.deleteUpdatedNode( detailNode? detailNode._id:'')"
 				/>
-				<VBtn density="compact" elevation="1" text="guardar"
-							:disabled="!chatbotStore.modifiedNodeIds.includes(
-								detailNode? detailNode._id:'')"
-							@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
+				<VBtn
+						density="compact"
+						elevation="1"
+						:text="(detailNode && !detailNode._id)? 'Crear' : 'Guardar'"
+						:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'') || hasErrors"
+						@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
 				/>
+				<!--				</template>-->
 			</div>
 		</div>
 

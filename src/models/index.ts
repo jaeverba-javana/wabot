@@ -12,7 +12,8 @@ export declare global {
 		phoneId?: string;
 	}
 
-	export interface FlowNode extends mongooseModel {
+	export type FlowNode = mongooseModel & FlowNodeBody
+	export interface FlowNodeBody {
 		name: string;
 		nodeId: string;
 		metadata: {
@@ -25,6 +26,7 @@ export declare global {
 			text: string;
 		}
 	}
+
 
 	export interface User {
 		email?: string;
