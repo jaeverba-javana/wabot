@@ -1,7 +1,7 @@
 import {Router} from "express";
 import {authenticate} from "./auth.js";
 
-import {FlowNode} from "../db/mongoDb/models/flowNode.model.js";
+import {FlowNode} from "../db/mongoDb/models/index.js";
 
 const router = Router()
 
@@ -19,6 +19,21 @@ router.get('/byChatbotId/:chatbotId', (req, res) => {
 			})
 })
 
+router.patch('/', async (req, res) => {
+	const r = await FlowNode.updateOneSet({_id: req.body._id}, req.body)
+	res.send({message: r})
+})
+
+router.post('/', async (req, res) => {
+	const flowNode = new FlowNode({
+		...req.body
+	})
+
+	const savedFlowNode = await flowNode.save()
+
+	res.send({message: 'ok', data: savedFlowNode})
+})
+
 export default Router()
 		.use('/node', authenticate, router)
 		.use('/nodes', authenticate, Router()
@@ -26,11 +41,22 @@ export default Router()
 					const promises = []
 
 					req.body.forEach((node) => {
-						promises.push(FlowNode.updateOne({_id: node._id}, node))
+						promises.push(
+								new Promise((resolve, reject) => {
+									const cos = {_id: node._id}
+									FlowNode.updateOne({_id: node._id}, node)
+											.then((result) => {
+												resolve({...cos, ...result})
+											})
+											.catch((err) => {
+												reject({...cos, ...err})
+											})
+								})
+						)
 					})
 
-					await Promise.all(promises)
-					
-					res.send({message: 'ok'})
+					const statuses = await Promise.allSettled(promises)
+
+					res.send({message: 'ok', data: statuses})
 
 				}))

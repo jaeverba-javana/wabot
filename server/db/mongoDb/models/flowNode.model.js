@@ -24,6 +24,19 @@ const messageSchema = new mongoose.Schema(
 		}
 )
 
+const optionSchema = new mongoose.Schema({
+	text: {type: String, required: true},
+	description: String,
+	nextNodeId: {type: String, required: false},
+	button_type: {
+		type: String,
+		enum: ['reply', 'url', 'phone'],
+		default: 'reply'
+	},
+	url: String,
+	phone_number: String,
+})
+
 const flowNodeSchema = new mongoose.Schema(
 		{
 			chatbotId: {
@@ -40,7 +53,8 @@ const flowNodeSchema = new mongoose.Schema(
 			nodeType: {
 				type: String,
 				enum: ['start', 'message', 'question', 'condition', 'action', 'end'],
-				required: [true, 'Tipo de nodo es requerido']
+				required: [true, 'Tipo de nodo es requerido'],
+				default: 'message'
 			},
 			name: {
 				type: String,
@@ -56,30 +70,7 @@ const flowNodeSchema = new mongoose.Schema(
 				default: () => ({})
 			}, // Opciones que se presentan al usuario (botones
 			// interactivos)
-			options: [{
-				option_id: {
-					type: String,
-					required: true,
-					trim: true
-				},
-				text: {
-					type: String,
-					required: true,
-					trim: true
-				},
-				description: String,
-				next_node_id: {
-					type: String,
-					required: true
-				}, // Para botones de WhatsApp
-				button_type: {
-					type: String,
-					enum: ['reply', 'url', 'phone'],
-					default: 'reply'
-				},
-				url: String, // Si es button_type: 'url'
-				phone_number: String // Si es button_type: 'phone'
-			}], // Para matching de respuestas abiertas (sin botones)
+			options: [optionSchema], // Para matching de respuestas abiertas (sin botones)
 			patterns: [{
 				pattern: String, // Regex o texto exacto
 				match_type: {
@@ -121,24 +112,144 @@ const flowNodeSchema = new mongoose.Schema(
 			priority: {
 				type: Number, default: 0
 			}, // Metadata adicional
-			metadata: metadataSchema
+			metadata: {
+				type: metadataSchema,
+				default: () => ({})
+			}
 		}, {
+			methods: {
+				getNextNode: async function (userResponse) {
+					// Si hay opciones (botones), buscar coincidencia
+					if (this.options && this.options.length > 0) {
+						const matchedOption = this.options.find(opt => opt.option_id === userResponse || opt.text.toLowerCase() === userResponse.toLowerCase());
+
+						if (matchedOption) {
+							return await mongoose.model('FlowNode').findByNodeId(this.chatbotId, matchedOption.next_node_id);
+						}
+					}
+
+					// Si hay patrones, intentar match
+					if (this.patterns && this.patterns.length > 0) {
+						for (const pattern of this.patterns) {
+							let isMatch = false;
+							const response = pattern.case_sensitive ? userResponse : userResponse.toLowerCase();
+							const patternText = pattern.case_sensitive ? pattern.pattern : pattern.pattern.toLowerCase();
+
+							switch (pattern.match_type) {
+								case 'exact':
+									isMatch = response === patternText;
+									break;
+								case 'contains':
+									isMatch = response.includes(patternText);
+									break;
+								case 'regex':
+									isMatch = new RegExp(patternText).test(response);
+									break;
+							}
+
+							if (isMatch && pattern.next_node_id) {
+								return await mongoose.model('FlowNode').findByNodeId(this.chatbotId, pattern.next_node_id);
+							}
+						}
+					}
+
+					// Fallback
+					if (this.fallback_node_id) {
+						return await mongoose.model('FlowNode').findByNodeId(this.chatbotId, this.fallback_node_id);
+					}
+
+					return null;
+				},
+				validateFlow: async function () {
+					const errors = [];
+
+					// Validar opciones
+					if (this.options) {
+						for (const option of this.options) {
+							const nextNode = await mongoose.model('FlowNode').findByNodeId(this.chatbotId, option.next_node_id);
+							if (!nextNode) {
+								errors.push(`Opción "${option.text}" apunta a nodo inexistente: ${option.next_node_id}`);
+							}
+						}
+					}
+
+					// Validar patterns
+					if (this.patterns) {
+						for (const pattern of this.patterns) {
+							if (pattern.next_node_id) {
+								const nextNode = await mongoose.model('FlowNode').findByNodeId(this.chatbotId, pattern.next_node_id);
+								if (!nextNode) {
+									errors.push(`Pattern "${pattern.pattern}" apunta a nodo inexistente: ${pattern.next_node_id}`);
+								}
+							}
+						}
+					}
+
+					// Validar fallback
+					if (this.fallback_node_id) {
+						const fallbackNode = await mongoose.model('FlowNode').findByNodeId(this.chatbotId, this.fallback_node_id);
+						if (!fallbackNode) {
+							errors.push(`Fallback apunta a nodo inexistente: ${this.fallback_node_id}`);
+						}
+					}
+
+					return {
+						valid: errors.length === 0, errors
+					};
+				}
+			},
+			statics: {
+				findStartNode: function (chatbotId) {
+					return this.findOne({
+						chatbotId: chatbotId, is_start: true, //is_active: true
+					});
+				},
+				findByChatbotId: function (chatbotId) {
+					return this.find({chatbotId})
+							.then(nodes => {
+								// console.log('nodes', nodes)
+								if (nodes && nodes.length) return nodes;
+
+								return this.create({
+									chatbotId: chatbotId,
+									name: 'Saludo',
+									nodeType: 'start'
+								})
+										.then(node => [node])
+										.catch(err => console.error('Error al crear nodo inicial:', err));
+							})
+							.catch(err => console.error('Error al obtener nodos:', err));
+				},
+				findByNodeId: function (chatbotId, nodeId) {
+					return this.findOne({
+						chatbotId: chatbotId,
+						_id: nodeId,
+						//is_active: true
+					});
+				}
+			},
 			timestamps: true
 		}
 );
 
 // Índices compuestos
-flowNodeSchema.index({chatbotId: 1, _id: 1}, {unique: true});
-flowNodeSchema.index({chatbotId: 1, isStart: 1});
+flowNodeSchema.index({chatbotId: 1, name: 1}, {unique: true});
+flowNodeSchema.index({chatbotId: 1, isStart: 1}, {
+	unique: true,
+	partialFilterExpression: {isStart: true}
+});
 // flowNodeSchema.index({chatbotId: 1, isActive: 1});
 
 // Static method for getting the starting node of a flow
+/*
 flowNodeSchema.statics.findStartNode = function (chatbotId) {
 	return this.findOne({
 		chatbotId: chatbotId, is_start: true, //is_active: true
 	});
 };
+*/
 
+/*
 flowNodeSchema.statics.findByChatbotId = function (chatbotId) {
 	return this.find({chatbotId})
 			.then(nodes => {
@@ -159,8 +270,10 @@ flowNodeSchema.statics.findByChatbotId = function (chatbotId) {
 			})
 			.catch(err => console.error('Error al obtener nodos:', err));
 };
+*/
 
 // Metodo estático para obtener nodo por node_id
+/*
 flowNodeSchema.statics.findByNodeId = function (chatbotId, nodeId) {
 	return this.findOne({
 		chatbotId: chatbotId,
@@ -168,9 +281,10 @@ flowNodeSchema.statics.findByNodeId = function (chatbotId, nodeId) {
 		//is_active: true
 	});
 };
+*/
 
 // Metodo de instancia para obtener el siguiente nodo basado en la respuesta
-flowNodeSchema.methods.getNextNode = async function (userResponse) {
+/*flowNodeSchema.methods.getNextNode = async function (userResponse) {
 	// Si hay opciones (botones), buscar coincidencia
 	if (this.options && this.options.length > 0) {
 		const matchedOption = this.options.find(opt => opt.option_id === userResponse || opt.text.toLowerCase() === userResponse.toLowerCase());
@@ -211,9 +325,10 @@ flowNodeSchema.methods.getNextNode = async function (userResponse) {
 	}
 
 	return null;
-};
+};*/
 
-// Método para validar que el flujo es válido (no hay referencias rotas)
+// Metodo para validar que el flujo es válido (no hay referencias rotas)
+/*
 flowNodeSchema.methods.validateFlow = async function () {
 	const errors = [];
 
@@ -251,5 +366,6 @@ flowNodeSchema.methods.validateFlow = async function () {
 		valid: errors.length === 0, errors
 	};
 };
+*/
 
 export const FlowNode = mongoose.model('FlowNode', flowNodeSchema);

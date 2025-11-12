@@ -2,10 +2,17 @@
 import {useChatbotStore} from "../../stores/chatbot.store.ts";
 import MessageCanvas from "../components/canvas/MessageCanvas.vue";
 import {computed, watch} from "vue";
+import ContractibleSection from "../ContraibleSection.vue";
+import MessageDetailNodeEditor
+	from "../components/editor/node/detail/MessageDetailNodeEditor.vue";
+import OptionsDetailNodeEditor
+	from "../components/editor/node/detail/OptionsDetailNodeEditor.vue";
 
 export default {
 	name: 'ChatbotView',
-	components: {MessageCanvas},
+	components: {
+		OptionsDetailNodeEditor,
+		MessageDetailNodeEditor, ContractibleSection, MessageCanvas},
 	data() {
 		return {
 			isPanning: false as boolean,
@@ -25,63 +32,151 @@ export default {
 	setup() {
 		const chatbotStore = useChatbotStore();
 
-		const detailNode = computed(() => {
-				console.log('tamos')
-				if (chatbotStore.selectedNodes.length === 1) {
-					return chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
-				}
-				return undefined
-			}
-		)
+		const detailNode = computed((): FlowNode | undefined =>
+			(chatbotStore.selectedNodes.length === 1)
+				? chatbotStore.modifiedNodes
+					.find(i => i._id === chatbotStore.selectedNodes[0]) ??
+				chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
+				: undefined
+		);
 
 		const detail = {
-			name: computed({
-				get() {
-					return detailNode.value?.name ?? '';
-				},
-				set(v) {
-					detailNode.value.name = v;
-				},
-			}),
-			message: {
-				header: {
-					value: computed({
-						get: () => detailNode.value?.message.header,
-						set: v => detailNode.value.message.header = v,
-					}),
-					errors: computed((): string[] => {
-						if (!detailNode.value) return [];
-						const errors: string[] = [];
-						if (detailNode.value.message.header.length > 100)
-							errors.push('Demasiado largo...')
+			name: {
+				value: computed({
+					get: () => detailNode.value?.name ?? '',
+					set: (v: string) => {
+						if (detailNode.value) {
+							// console.log("detail")
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								name: v
+							})
+						}
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
+					const errors: string[] = [];
+					if (!detailNode.value.name)
+						errors.push('El nombre es requerido');
+					if (
+						chatbotStore.nodes.find(v => v._id !== detailNode.value?._id
+						&& v.name === detailNode.value?.name)
+					)
+						errors.push('Ya existe un nodo con ese nombre');
+					return errors;
+				})
+			},
+			'message.header': {
+				value: computed({
+					get: () => detailNode.value?.message.header,
+					set: (v: string) => {
+						if (detailNode.value) {
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								message: {
+									header: v//.trim()
+								}
+							})
+						}
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
 
-						chatbotStore.updateNode({
-							_id: detailNode.value._id,
-							message: {header: detailNode.value.message.header}
-						});
-						return errors;
-					})
-				},
-				text: {
-					value: computed({
-						get: () => detailNode.value?.message.text ?? '',
-						set: v => detailNode.value.message.text = v,
-					}),
-					errors: computed((): string[] => {
-						if (!detailNode.value) return [];
-						const errors: string[] = [];
-						if (!detailNode.value.message.text)
-							errors.push('El mensaje es requerido');
+					const errors: string[] = [];
+					if (detailNode.value.message.header?.trim().length > 100)
+						errors.push('Demasiado largo...')
 
-						chatbotStore.updateNode({
-							_id: detailNode.value._id,
-							message: {text: detailNode.value.message.text}
-						});
-						return errors;
-					})
-				}
+					return errors;
+				})
+			},
+			'message.text': {
+				value: computed({
+					get: () => detailNode.value?.message.text ?? '',
+					set(v: string) {
+						if (detailNode.value) {
+							chatbotStore.updateNode({
+								_id: detailNode.value._id,
+								message: {
+									text: v//.replace(/^\n+|\n+$/g, '').trim()
+								}
+							})
+						}
+					}
+				}),
+				errors: computed((): string[] => {
+					if (!detailNode.value) return [];
+					const errors: string[] = [];
+					if (!detailNode.value.message.text)
+						errors.push('El mensaje es requerido');
+
+					return errors;
+				})
+			},
+			'options': {
+				value: computed<string[]|undefined>({
+					get: () => detailNode.value?.options,
+					set(v: {
+						type: 'add',
+						data: {text: string}
+					} | {
+						type: 'mod',
+						data: {index: number, content: {text: string}}
+					}) {
+						if (detailNode.value) {
+							const mn = chatbotStore.modifiedNodes.find(
+								i => i._id === detailNode.value?._id
+							);
+
+							if (v.type === 'add') {
+
+
+								if (mn) {
+									chatbotStore.updateNode({
+										_id: detailNode.value._id,
+										options: [...mn.options, v.data]
+									})
+								} else {
+									chatbotStore.updateNode({
+										_id: detailNode.value._id,
+										options: [v.data]
+									})
+								}
+								return;
+							}
+
+							if (v.type === "mod") {
+								mn.options[v.data.index] = {
+									...mn?.options[v.data.index],
+									...v.data.content
+								};
+
+								chatbotStore.updateNode({
+									_id: detailNode.value._id,
+									options: mn?.options
+								})
+							}
+						}
+					}
+				}),
+				errors: computed(() => [])
 			}
-		}
+		};
+
+		const hasErrors = computed((): boolean => {
+			if (!detail) return false;
+
+			let r = false
+
+			Object.keys(detail).forEach((v: string) => {
+				const i = detail[v].errors.value;
+
+				if (i.length > 0) r = true
+			})
+
+			return r
+		});
 
 		return {
 			minScale: 0.2 as number,
@@ -89,8 +184,9 @@ export default {
 			zoomIntensity: 0.0015 as number, // tune sensitivity
 			chatbotStore,
 			detailNode,
-			detail
-		}
+			detail,
+			hasErrors
+		};
 	},
 
 	methods: {
@@ -297,8 +393,12 @@ export default {
 			this.startMouseX = e.clientX;
 			this.startMouseY = e.clientY;
 			this.isMouseDownOnNode = true;
-			if (!this.chatbotStore.selectedNodes.length)
-				this.chatbotStore.setSelectedNodes(node._id)
+			if (!this.chatbotStore.selectedNodes.length) {
+				this.chatbotStore.setSelectedNodes(node._id);
+				return;
+			}
+
+			this.chatbotStore.setSelectedNodes(node._id);
 			// }
 		},
 
@@ -309,8 +409,7 @@ export default {
 
 	mounted() {
 		this.center()
-	}
-	,
+	},
 	beforeUpdate() {
 		// this.center()
 	}
@@ -360,49 +459,126 @@ export default {
 							<feMergeNode in="SourceGraphic"/>
 						</feMerge>
 					</filter>
-				</defs>
 
-				<filter id="shadow2" x="-50%" y="-50%" width="200%" height="200%">
-					<feDropShadow dx="8" dy="8" stdDeviation="4"
-												flood-color="blue" flood-opacity="0.4"/>
-				</filter>
+					<filter id="elevation2" x="-100%" y="-100%" width="300%" height="300%">
+						<!-- Primera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset1"/>
+						<feGaussianBlur in="offset1" stdDeviation="3" result="blur1"/>
+						<feFlood flood-color="rgba(255, 0, 0, 0.2)" result="color1"/>
+						<feComposite in="color1" in2="blur1" operator="in" result="shadow1"/>
+
+						<!-- Segunda sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="3" result="offset2"/>
+						<feGaussianBlur in="offset2" stdDeviation="4" result="blur2"/>
+						<feFlood flood-color="rgba(0, 0, 255, 0.14)" result="color2"/>
+						<feComposite in="color2" in2="blur2" operator="in" result="shadow2"/>
+
+						<!-- Tercera sombra -->
+						<feOffset in="SourceAlpha" dx="0" dy="1" result="offset3"/>
+						<feGaussianBlur in="offset3" stdDeviation="8" result="blur3"/>
+						<feFlood flood-color="rgba(0, 255, 0, 0.12)" result="color3"/>
+						<feComposite in="color3" in2="blur3" operator="in" result="shadow3"/>
+
+						<!-- Combinar todas las sombras -->
+						<feMerge>
+							<feMergeNode in="shadow2"/>
+							<feMergeNode in="shadow1"/>
+							<feMergeNode in="shadow3"/>
+							<feMergeNode in="SourceGraphic"/>
+						</feMerge>
+					</filter>
+				</defs>
 			</defs>
 
 			<g ref="content"
 				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
-				<MessageCanvas v-for="item in chatbotStore.nodes" :key="item._id"
-											 :node="item" @mousedown="event =>
-											 handleNodeMouseDown(item, event)"
-											 :selected="chatbotStore.selectedNodes.includes(item._id)"/>
+				<MessageCanvas
+						v-for="item in chatbotStore.wholeNode" :key="item._id"
+						:node="item" @mousedown="event => handleNodeMouseDown(item, event)"
+						:selected="chatbotStore.selectedNodes.includes(item._id!)"
+						:isModified="chatbotStore.modifiedNodeIds.includes(item._id!)"
+				/>
 			</g>
 		</svg>
 
 		<div class="details">
 			<h2>Detalles</h2>
 
-			<div v-if="chatbotStore.selectedNodes.length === 1" class="wrapper">
-				<VTextField
-						label="Nombre"
-						type="text"
-						v-model="detailNode.name"/>
+			<div class="wrapper">
+				<template v-if="detailNode">
+					<VTextField
+							label="Nombre"
+							type="text"
+							v-model="detail.name.value.value"
+							:errorMessages="detail.name.errors.value"
+					/>
 
-				<h3>Mensaje</h3>
+					<div style="display: flex;flex-direction: column; gap: .5rem;">
+						<ContractibleSection title="Mensaje" :node="detail['message.text']">
+							<MessageDetailNodeEditor :detail="detail" />
+						</ContractibleSection>
 
-				<VTextField
-						label="Header"
-						type="text"
-						v-model="detail.message.header.value.value"
-						:errorMessages="detail.message.header.errors.value"/>
+						<ContractibleSection title="Opciones">
+							<OptionsDetailNodeEditor  :options="detail.options" />
+						</ContractibleSection>
+					</div>
 
-				<VTextarea
-						label="Mensaje"
-						v-model="detail.message.text.value.value"
-						:errorMessages="detail.message.text.errors.value"/>
+
+				</template>
+			</div>
+
+			<div style="display: flex;justify-content: end; gap:.5rem;">
+				<!--				<template-->
+				<!--						v-if="detailNode && !detailNode._id"-->
+				<!--				></template>-->
+
+				<!--				<template v-else>-->
+
+				<template v-if="detailNode">
+					<template v-if="typeof detailNode._id === 'symbol'">
+						<VBtn
+								density="compact" elevation="1"
+								text="Eliminar"
+								variant="text"
+								color="error"
+								@click="chatbotStore.deleteNode(detailNode!._id)"
+						/>
+						<VBtn
+								density="compact" elevation="1"
+								text="Crear"
+								:disabled="hasErrors"
+								@click="chatbotStore.putNode(detailNode!._id)"
+						/>
+					</template>
+
+					<template v-else>
+						<VBtn
+								density="compact" elevation="1"
+								text="cancelar"
+								:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'')"
+								variant="text"
+								color="error"
+								@click="chatbotStore.deleteUpdatedNode( detailNode? detailNode._id:'')"
+						/>
+						<VBtn
+								density="compact" elevation="1"
+								text="Guardar"
+								:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'') || hasErrors"
+								@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
+						/>
+					</template>
+
+				</template>
+				<!--				</template>-->
 			</div>
 		</div>
 
 		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
-				 viewBox="0 0 640 640">
+				 viewBox="0 0 640 640"
+				 @click="chatbotStore.createNode"
+		>
 			<path
 					fill="currentColor"
 					d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
@@ -437,12 +613,14 @@ export default {
 }
 
 .details {
+	--totalPadding: .5rem;
+
 	z-index: 3;
 	width: var(--details-width);
 	box-shadow: var(--elevation3);
 	background-color: white;
 
-	padding: .5rem;
+
 	scroll-behavior: smooth;
 	/*
 	overflow-y: auto;
@@ -457,6 +635,7 @@ export default {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
+		padding: calc(var(--totalPadding, .5rem) / 2);
 		//padding: 0 1rem;
 
 

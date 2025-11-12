@@ -94,18 +94,31 @@ const chatbotSchema = new Schema({
 		},
 	}
 }, {
-	timestamps: true
+	timestamps: true,
+	statics: {
+		findByUserId: function (userId) {
+			return new Promise((resolve, reject) => {
+				this.findOne({
+					userId,
+				}).then(chatbot => {
+					resolve(chatbot?? new this({userId}).save());
+				}).catch(err => reject(err));
+			})
+		}
+	}
 });
 
-chatbotSchema.statics.findByUserId = function (userId) {
-	return new Promise((resolve, reject) => {
-		this.findOne({
-			userId,
-		}).exec().then(chatbot => {
-			resolve(chatbot || new this({userId}).save());
-		}).catch(err => reject(err));
-	})
-};
+chatbotSchema.set('toJSON', {
+	// versionKey: false,
+	transform: (doc, ret) => {
+		// delete ret._id;
+		// delete ret.userId;
+		if (ret.token) {
+			ret.token = '*'.repeat(ret.token.length);
+		}
+		return ret;
+	}
+});
 
 // Ensure each user can only have one chatbot configuration
 // chatbotSchema.index({userId: 1}, {unique: true});

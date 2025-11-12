@@ -1,11 +1,13 @@
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, PropType} from 'vue'
+import {useChatbotStore} from "../../../stores/chatbot.store.ts";
 
 export default defineComponent({
 	name: "MessageCanvas",
 	props: {
-		node: {type: Object, required: true},
+		node: {type: Object as PropType<FlowNode>, required: true},
 		selected: {type: Boolean, default: false},
+		isModified: {type: Boolean, default: false}
 	},
 	emits: ['mousedown'],
 	data: () => ({
@@ -13,7 +15,9 @@ export default defineComponent({
 
 	}),
 	setup: () => {
+		const chatbotStore = useChatbotStore()
 
+		return{chatbotStore}
 	},
 	methods: {
 		handleNodeMouseDown(event) {
@@ -41,40 +45,76 @@ export default defineComponent({
 			this.hovered = false
 
 		},
+		calcLineEnd(nodeId: String) {
+			const nn = this.chatbotStore.nodes.find(v =>
+				v.name === nodeId
+			)!
+
+			return[
+				nn.metadata.positionX - this.$props.node.metadata.positionX,
+				nn.metadata.positionY - this.$props.node.metadata.positionY + 12.5,
+			]
+		}
 	},
 	computed: {
 		status() {
+			// if (this.isModified) return 'modified'
 			if (this.selected) return 'selected'
 			if (this.hovered) return 'hovered'
 			return 'default'
+		},
+		isSaved() {
+			return !(typeof this.node._id === 'symbol')
 		}
 	}
 })
 </script>
 
 <template>
-	<g>
-		<g class="node">
+	<g :transform="`translate(${node.metadata.positionX}, ${node.metadata.positionY})`">
+		<g class="node" >
 			<rect
 					ref="nodeRect"
-					:x="node.metadata.positionX" :y="node.metadata.positionY"
+					:x="0" :y="0"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
-					:stroke="status === 'selected'? '#4fd479' : '#a5a5a5'"
-					stroke-width="2" fill="white"
+					:stroke=" !isSaved? '#ff5f5f' :
+					isModified? '#ffbf5f' :
+					status === 'selected'? '#4fd479' :
+					'#a5a5a5'"
+					:stroke-width="status === 'selected'? 2 : 1" fill="white"
 					:filter="(this.status === 'hovered' || this.status === 'selected') ? 'url(#elevation3)' : ''"/>
 
-			<text :x="node.metadata.positionX + 5"
-						:y="node.metadata.positionY + 18">
+			<text :x="0 + 5"
+						:y="0/**/ + 18">
 				{{ node.name }}
 			</text>
 
 			<line v-show="node.options.length > 0"
-						:x1="node.metadata.positionX"
-						:y1="node.metadata.positionY + 25"
-						:x2="node.metadata.positionX + 200"
-						:y2="node.metadata.positionY + 25"
+						:x1="0"
+						:y1="0 + 25"
+						:x2="0 + 150"
+						:y2="0 + 25"
 						stroke="currentcolor"
-						stroke-width="2"/>
+						stroke-width="2"
+						opacity="0.5"
+			/>
+
+			<template v-for="(op, opi) in node.options">
+				<text
+						:x="0 + 5"
+						:y="0 + 18 + ((opi + 1) * 25)"
+				>
+					{{ op.text }}
+				</text>
+
+				<path v-if="op.nextNodeId"
+							:d="`m150,${12.5 + ((opi + 1) * 25)}C200,${12.5 +
+							((opi + 1) * 25)},${calcLineEnd(op.nextNodeId).map((v, i) =>
+							i===0?v-50:v).join(',')},${calcLineEnd(op.nextNodeId).join(',')}`"
+							stroke-width="2"
+							stroke="currentcolor" fill="none" />
+			</template>
+
 
 		</g>
 
@@ -84,7 +124,7 @@ export default defineComponent({
 					@mouseover.self.stop="handleHover( $event, 'over')"
 					@mouseout.self.stop="handleHover($event, 'out')"
 					class="move"
-					:x="node.metadata.positionX" :y="node.metadata.positionY"
+					:x="0" :y="0"
 					width="150" :height="25*(node.options.length+1)" rx="5" ry="5"
 					fill="none"/>
 
