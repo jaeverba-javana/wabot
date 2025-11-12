@@ -24,6 +24,19 @@ const messageSchema = new mongoose.Schema(
 		}
 )
 
+const optionSchema = new mongoose.Schema({
+	text: {type: String, required: true},
+	description: String,
+	nextNodeId: {type: String, required: false},
+	button_type: {
+		type: String,
+		enum: ['reply', 'url', 'phone'],
+		default: 'reply'
+	},
+	url: String,
+	phone_number: String,
+})
+
 const flowNodeSchema = new mongoose.Schema(
 		{
 			chatbotId: {
@@ -40,7 +53,8 @@ const flowNodeSchema = new mongoose.Schema(
 			nodeType: {
 				type: String,
 				enum: ['start', 'message', 'question', 'condition', 'action', 'end'],
-				required: [true, 'Tipo de nodo es requerido']
+				required: [true, 'Tipo de nodo es requerido'],
+				default: 'message'
 			},
 			name: {
 				type: String,
@@ -56,30 +70,7 @@ const flowNodeSchema = new mongoose.Schema(
 				default: () => ({})
 			}, // Opciones que se presentan al usuario (botones
 			// interactivos)
-			options: [{
-				option_id: {
-					type: String,
-					required: true,
-					trim: true
-				},
-				text: {
-					type: String,
-					required: true,
-					trim: true
-				},
-				description: String,
-				next_node_id: {
-					type: String,
-					required: true
-				}, // Para botones de WhatsApp
-				button_type: {
-					type: String,
-					enum: ['reply', 'url', 'phone'],
-					default: 'reply'
-				},
-				url: String, // Si es button_type: 'url'
-				phone_number: String // Si es button_type: 'phone'
-			}], // Para matching de respuestas abiertas (sin botones)
+			options: [optionSchema], // Para matching de respuestas abiertas (sin botones)
 			patterns: [{
 				pattern: String, // Regex o texto exacto
 				match_type: {
@@ -121,7 +112,10 @@ const flowNodeSchema = new mongoose.Schema(
 			priority: {
 				type: Number, default: 0
 			}, // Metadata adicional
-			metadata: metadataSchema
+			metadata: {
+				type: metadataSchema,
+				default: () => ({})
+			}
 		}, {
 			methods: {
 				getNextNode: async function (userResponse) {
@@ -219,11 +213,7 @@ const flowNodeSchema = new mongoose.Schema(
 								return this.create({
 									chatbotId: chatbotId,
 									name: 'Saludo',
-									nodeType: 'start',
-									metadata: {
-										positionX: 0,
-										positionY: 0,
-									}
+									nodeType: 'start'
 								})
 										.then(node => [node])
 										.catch(err => console.error('Error al crear nodo inicial:', err));

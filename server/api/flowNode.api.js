@@ -20,33 +20,18 @@ router.get('/byChatbotId/:chatbotId', (req, res) => {
 })
 
 router.patch('/', async (req, res) => {
-	function buildSetObject(updates, prefix = '') {
-		const setObject = {};
-
-		Object.keys(updates).forEach(key => {
-			const fullPath = prefix ? `${prefix}.${key}` : key;
-			const value = updates[key];
-
-			if (value && typeof value === 'object' &&
-					!Array.isArray(value) &&
-					!(value instanceof Date)) {
-				// Recursivamente convertir objetos anidados a notación de puntos
-				Object.assign(setObject, buildSetObject(value, fullPath));
-			} else {
-				setObject[fullPath] = value;
-			}
-		});
-
-		return setObject;
-	}
-
-	const r = await FlowNode.updateOne({_id: req.body._id}, {
-		$set: buildSetObject({
-			...req.body,
-			_id: undefined
-		})
-	})
+	const r = await FlowNode.updateOneSet({_id: req.body._id}, req.body)
 	res.send({message: r})
+})
+
+router.post('/', async (req, res) => {
+	const flowNode = new FlowNode({
+		...req.body
+	})
+
+	const savedFlowNode = await flowNode.save()
+
+	res.send({message: 'ok', data: savedFlowNode})
 })
 
 export default Router()

@@ -1,12 +1,11 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {mdiLogout} from "@mdi/js";
-import SVGIcon from '@jamescoyle/vue-icon/lib/svg-icon.vue'
+// import SVGIcon from '@jamescoyle/vue-icon/lib/svg-icon.vue'
 import {useAppStore} from "../../stores/app.store.ts";
 
 export default {
 	name: "HomeLayout",
-	components: {SVGIcon},
 	data() {
 		return {
 			drawer: true,

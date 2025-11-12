@@ -14,13 +14,17 @@ export declare global {
 
 	export type FlowNode = mongooseModel & FlowNodeBody
 	export interface FlowNodeBody {
+		_id: symbol;
 		name: string;
-		nodeId: string;
+		// nodeId: string;
 		metadata: {
 			positionX: number;
 			positionY: number;
 		},
-		options: [],
+		options: {
+			text: string;
+			nextNodeId?: string;
+		}[],
 		message: {
 			header?: string;
 			text: string;

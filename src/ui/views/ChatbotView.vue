@@ -2,10 +2,17 @@
 import {useChatbotStore} from "../../stores/chatbot.store.ts";
 import MessageCanvas from "../components/canvas/MessageCanvas.vue";
 import {computed, watch} from "vue";
+import ContractibleSection from "../ContraibleSection.vue";
+import MessageDetailNodeEditor
+	from "../components/editor/node/detail/MessageDetailNodeEditor.vue";
+import OptionsDetailNodeEditor
+	from "../components/editor/node/detail/OptionsDetailNodeEditor.vue";
 
 export default {
 	name: 'ChatbotView',
-	components: {MessageCanvas},
+	components: {
+		OptionsDetailNodeEditor,
+		MessageDetailNodeEditor, ContractibleSection, MessageCanvas},
 	data() {
 		return {
 			isPanning: false as boolean,
@@ -31,7 +38,7 @@ export default {
 					.find(i => i._id === chatbotStore.selectedNodes[0]) ??
 				chatbotStore.nodes.find(i => i._id === chatbotStore.selectedNodes[0])
 				: undefined
-		)
+		);
 
 		const detail = {
 			name: {
@@ -39,6 +46,7 @@ export default {
 					get: () => detailNode.value?.name ?? '',
 					set: (v: string) => {
 						if (detailNode.value) {
+							// console.log("detail")
 							chatbotStore.updateNode({
 								_id: detailNode.value._id,
 								name: v
@@ -51,6 +59,11 @@ export default {
 					const errors: string[] = [];
 					if (!detailNode.value.name)
 						errors.push('El nombre es requerido');
+					if (
+						chatbotStore.nodes.find(v => v._id !== detailNode.value?._id
+						&& v.name === detailNode.value?.name)
+					)
+						errors.push('Ya existe un nodo con ese nombre');
 					return errors;
 				})
 			},
@@ -81,7 +94,7 @@ export default {
 			'message.text': {
 				value: computed({
 					get: () => detailNode.value?.message.text ?? '',
-					set: (v: string) => {
+					set(v: string) {
 						if (detailNode.value) {
 							chatbotStore.updateNode({
 								_id: detailNode.value._id,
@@ -101,7 +114,55 @@ export default {
 					return errors;
 				})
 			},
-		}
+			'options': {
+				value: computed<string[]|undefined>({
+					get: () => detailNode.value?.options,
+					set(v: {
+						type: 'add',
+						data: {text: string}
+					} | {
+						type: 'mod',
+						data: {index: number, content: {text: string}}
+					}) {
+						if (detailNode.value) {
+							const mn = chatbotStore.modifiedNodes.find(
+								i => i._id === detailNode.value?._id
+							);
+
+							if (v.type === 'add') {
+
+
+								if (mn) {
+									chatbotStore.updateNode({
+										_id: detailNode.value._id,
+										options: [...mn.options, v.data]
+									})
+								} else {
+									chatbotStore.updateNode({
+										_id: detailNode.value._id,
+										options: [v.data]
+									})
+								}
+								return;
+							}
+
+							if (v.type === "mod") {
+								mn.options[v.data.index] = {
+									...mn?.options[v.data.index],
+									...v.data.content
+								};
+
+								chatbotStore.updateNode({
+									_id: detailNode.value._id,
+									options: mn?.options
+								})
+							}
+						}
+					}
+				}),
+				errors: computed(() => [])
+			}
+		};
 
 		const hasErrors = computed((): boolean => {
 			if (!detail) return false;
@@ -115,7 +176,7 @@ export default {
 			})
 
 			return r
-		})
+		});
 
 		return {
 			minScale: 0.2 as number,
@@ -125,7 +186,7 @@ export default {
 			detailNode,
 			detail,
 			hasErrors
-		}
+		};
 	},
 
 	methods: {
@@ -247,11 +308,7 @@ export default {
 		},
 
 		// Metodo alternativo sin usar getScreenCTM
-		screenToSVGManual(
-			clientX: number,
-			clientY: number,
-			svgElement: SVGSVGElement
-		) {
+		screenToSVGManual(clientX: number, clientY: number, svgElement: SVGSVGElement) {
 			const rect = svgElement.getBoundingClientRect();
 			// Convertir de coordenadas de pantalla a coordenadas del viewport SVG
 			const x = clientX - rect.left;
@@ -436,7 +493,7 @@ export default {
 			<g ref="content"
 				 :transform="`translate(${offsetX}, ${offsetY}) scale(${scale})`">
 				<MessageCanvas
-						v-for="item in chatbotStore.nodes" :key="item._id"
+						v-for="item in chatbotStore.wholeNode" :key="item._id"
 						:node="item" @mousedown="event => handleNodeMouseDown(item, event)"
 						:selected="chatbotStore.selectedNodes.includes(item._id!)"
 						:isModified="chatbotStore.modifiedNodeIds.includes(item._id!)"
@@ -448,7 +505,7 @@ export default {
 			<h2>Detalles</h2>
 
 			<div class="wrapper">
-				<template v-if="chatbotStore.selectedNodes.length === 1">
+				<template v-if="detailNode">
 					<VTextField
 							label="Nombre"
 							type="text"
@@ -456,20 +513,17 @@ export default {
 							:errorMessages="detail.name.errors.value"
 					/>
 
-					<VDivider/>
+					<div style="display: flex;flex-direction: column; gap: .5rem;">
+						<ContractibleSection title="Mensaje" :node="detail['message.text']">
+							<MessageDetailNodeEditor :detail="detail" />
+						</ContractibleSection>
 
-					<h3>Mensaje</h3>
+						<ContractibleSection title="Opciones">
+							<OptionsDetailNodeEditor  :options="detail.options" />
+						</ContractibleSection>
+					</div>
 
-					<VTextField
-							label="Header"
-							type="text"
-							v-model="detail['message.header'].value.value"
-							:errorMessages="detail['message.header'].errors.value"/>
 
-					<VTextarea
-							label="Mensaje"
-							v-model="detail['message.text'].value.value"
-							:errorMessages="detail['message.text'].errors.value"/>
 				</template>
 			</div>
 
@@ -479,29 +533,52 @@ export default {
 				<!--				></template>-->
 
 				<!--				<template v-else>-->
-				<VBtn density="compact" elevation="1" :text="(detailNode &&
-				!detailNode._id)? 'Eliminar' :'cancelar'"
-							:disabled="!(detailNode && !detailNode._id) &&
-							(!chatbotStore.modifiedNodeIds.includes(
-								detailNode? detailNode._id:''))"
-							variant="text"
-							color="error"
-							@click="chatbotStore.deleteUpdatedNode( detailNode? detailNode._id:'')"
-				/>
-				<VBtn
-						density="compact"
-						elevation="1"
-						:text="(detailNode && !detailNode._id)? 'Crear' : 'Guardar'"
-						:disabled="!chatbotStore.modifiedNodeIds.includes(
+
+				<template v-if="detailNode">
+					<template v-if="typeof detailNode._id === 'symbol'">
+						<VBtn
+								density="compact" elevation="1"
+								text="Eliminar"
+								variant="text"
+								color="error"
+								@click="chatbotStore.deleteNode(detailNode!._id)"
+						/>
+						<VBtn
+								density="compact" elevation="1"
+								text="Crear"
+								:disabled="hasErrors"
+								@click="chatbotStore.putNode(detailNode!._id)"
+						/>
+					</template>
+
+					<template v-else>
+						<VBtn
+								density="compact" elevation="1"
+								text="cancelar"
+								:disabled="!chatbotStore.modifiedNodeIds.includes(
+								detailNode? detailNode._id:'')"
+								variant="text"
+								color="error"
+								@click="chatbotStore.deleteUpdatedNode( detailNode? detailNode._id:'')"
+						/>
+						<VBtn
+								density="compact" elevation="1"
+								text="Guardar"
+								:disabled="!chatbotStore.modifiedNodeIds.includes(
 								detailNode? detailNode._id:'') || hasErrors"
-						@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
-				/>
+								@click="chatbotStore.updateModifiedNode(detailNode? detailNode._id:'')"
+						/>
+					</template>
+
+				</template>
 				<!--				</template>-->
 			</div>
 		</div>
 
 		<svg class="fab" xmlns="http://www.w3.org/2000/svg"
-				 viewBox="0 0 640 640">
+				 viewBox="0 0 640 640"
+				 @click="chatbotStore.createNode"
+		>
 			<path
 					fill="currentColor"
 					d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z"/>
@@ -536,12 +613,14 @@ export default {
 }
 
 .details {
+	--totalPadding: .5rem;
+
 	z-index: 3;
 	width: var(--details-width);
 	box-shadow: var(--elevation3);
 	background-color: white;
 
-	padding: .5rem;
+
 	scroll-behavior: smooth;
 	/*
 	overflow-y: auto;
@@ -556,6 +635,7 @@ export default {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
+		padding: calc(var(--totalPadding, .5rem) / 2);
 		//padding: 0 1rem;
 
 

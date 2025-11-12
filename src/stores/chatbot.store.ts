@@ -11,11 +11,13 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	const appStore = useAppStore();
 
 	const nodes = ref<(FlowNodeBody & FlowNode)[]>([])
-	const selectedNodes = ref<string[]>([])
+	const selectedNodes = ref<(string | symbol)[]>([])
 	const _modifiedNodes = ref<PFlowNode[]>([])
 
 	function getDifferentFields<T>(original: T | unknown, changes: Partial<T> | unknown): Partial<T> | undefined {
 		// Si changes no es un objeto válido, retornar undefined
+		console.log('original', original)
+		console.log('changes', changes)
 		if (!changes || typeof changes !== 'object' || Array.isArray(changes)) {
 			return undefined;
 		}
@@ -80,6 +82,8 @@ export const useChatbotStore = defineStore('chatbot', () => {
 		})
 	)
 
+	const wholeNode = computed<FlowNode[]>(() => nodes.value.map(v => modifiedNodes.value.find(va => v._id === va._id) ?? v))
+
 	const setSelectedNodes = (nodeId: string) => selectedNodes.value = [nodeId]
 	const cleanSelectedNodes = () => selectedNodes.value = []
 	const updateSelectedNodesPosition = () => {
@@ -104,25 +108,44 @@ export const useChatbotStore = defineStore('chatbot', () => {
 	const updateNode = (modifiedNode: PFlowNode) => {
 		const index = _modifiedNodes.value.findIndex(v => v._id === modifiedNode._id)
 
+		console.log(index)
+
 		if (index === -1) {
-			_modifiedNodes.value.push(modifiedNode as PFlowNode);
+			let toPush = modifiedNode
+			if (modifiedNode.options) {
+				toPush.options = [
+					...nodes.value.find(v => v._id === modifiedNode._id)!.options,
+					...toPush.options
+				]
+			}
+
+			_modifiedNodes.value.push(toPush as PFlowNode);
 			return;
 		}
 
-		const modifications = getDifferentFields(
+		/*const modifications = getDifferentFields(
 			nodes.value!.find(v => v._id === modifiedNode._id)!,
 			modifiedNode
+		)*/
+
+		const _modifications = mergeObjects(
+			_modifiedNodes.value[index],
+			modifiedNode
 		)
+
+		const modifications = getDifferentFields(
+			nodes.value!.find(v => v._id === modifiedNode._id)!,
+			_modifications
+		)
+
+		console.log('modifications: ', {_id: modifiedNode._id, ...modifications})
 
 		if (!modifications) {
 			_modifiedNodes.value.splice(index, 1);
 			return;
 		}
 
-		_modifiedNodes.value[index] = mergeObjects(
-			_modifiedNodes.value[index],
-			modifications as FlowNode
-		)
+		_modifiedNodes.value[index] = {_id: modifiedNode._id, ...modifications} as PFlowNode;
 	}
 
 	const deleteUpdatedNode = (nodeId: string) => {
@@ -136,7 +159,52 @@ export const useChatbotStore = defineStore('chatbot', () => {
 		const index = _modifiedNodes.value.findIndex(v => v._id === nodeId)
 		if (index !== -1) {
 			axiosApi.patch('/node', _modifiedNodes.value[index])
-				.then(value => console.log('updated node: ', value, 'nodeId:', nodeId))
+				.then(() => {
+
+					nodes.value[nodes.value.findIndex(v => v._id === nodeId)]
+						= modifiedNodes.value.find(v => v._id === nodeId)
+					_modifiedNodes.value.splice(index, 1);
+				})
+				.catch(reason => console.error(reason))
+		}
+	}
+
+	const createNode = () => {
+		const nn = {
+			_id: Symbol(),
+			message: {
+				text: ''
+			},
+			metadata: {
+				positionX: 0,
+				positionY: 0,
+			},
+			name: '',
+			nodeId: '',
+			options: []
+		}
+		nodes.value.push(nn)
+
+		selectedNodes.value = [nn._id]
+	}
+
+	const deleteNode = (nodeId: string | symbol) => {
+		const n = nodes.value.findIndex(v => v._id === nodeId)
+		console.log(n)
+		nodes.value.splice(n, 1)
+	}
+
+	const putNode = (nodeId: string) => {
+		const index = _modifiedNodes.value.findIndex(v => v._id === nodeId)
+		if (index !== -1) {
+			axiosApi.post('/node', {
+				..._modifiedNodes.value[index],
+				chatbotId: chatbot.value._id
+			})
+				.then(({data: res}) => {
+					_modifiedNodes.value.splice(index, 1)
+					nodes.value[nodes.value.findIndex(v => v._id === nodeId)] = res.data
+				})
 				.catch(reason => console.error(reason))
 		}
 	}
@@ -158,5 +226,9 @@ export const useChatbotStore = defineStore('chatbot', () => {
 		updateNode,
 		deleteUpdatedNode,
 		updateModifiedNode,
+		createNode,
+		deleteNode,
+		putNode,
+		wholeNode
 	}
 })
