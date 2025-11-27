@@ -1,7 +1,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-export default defineComponent({
+export default {
 	name: "MainRootView",
 	data() {
 		return {
@@ -18,7 +18,7 @@ export default defineComponent({
 			]
 		}
 	}
-})
+}
 </script>
 
 <template>
@@ -26,50 +26,34 @@ export default defineComponent({
 		<v-carousel
 				:show-arrows="false"
 				hide-delimiters
+				height="auto"
+				cycle
 		>
 			<v-carousel-item
 					cover
 			>
 				<!--						<div style="aspect-ratio: 3/5">-->
-				<v-container class="wrapper">
-					<v-row align="center" justify="center" class="py-16">
-						<v-col cols="12" md="6" class="text-center text-md-left">
-							<h1 class="text-h2 font-weight-bold mb-4">Impulsa tu
-								negocio con Vannia</h1>
-							<p class="text-h6 mb-8">La solución perfecta para automatizar tus conversaciones de WhatsApp y mejorar la experiencia de tus clientes.</p>
-							<v-btn to="/auth/signup" color="primary" size="x-large" class="me-4">Comenzar Ahora</v-btn>
-							<v-btn to="/auth/login" color="white" size="x-large"
-										 variant="outlined">Iniciar Sesión</v-btn>
-						</v-col>
-						<v-col cols="12" md="6" class="d-none d-md-flex justify-center">
-							<v-img src="https://cdn.pixabay.com/photo/2020/05/18/16/17/social-media-5187243_960_720.png" max-width="500" contain></v-img>
-						</v-col>
-					</v-row>
-				</v-container>
+				<div class="wrapper">
+					<span></span>
+
+					<img src="/img/carrousel/1.png">
+				</div>
 				<!--						</div>-->
 			</v-carousel-item>
 
 			<v-carousel-item>
-				<div style="aspect-ratio: 3/5">
-					<v-container class="wrapper">
-						<v-row align="center" justify="center" class="py-16">
-							<v-col cols="12" md="6" class="text-center text-md-left">
-								<h1 class="text-h2 font-weight-bold mb-4">Bienvenido a Nuestro Chatbot Inteligente</h1>
-								<p class="text-h6 mb-8">La solución perfecta para automatizar tus conversaciones de WhatsApp y mejorar la experiencia de tus clientes.</p>
-								<v-btn to="/auth/signup" color="primary" size="x-large" class="me-4">Comenzar Ahora</v-btn>
-								<v-btn to="/auth/login" color="secondary" size="x-large" variant="outlined">Iniciar Sesión</v-btn>
-							</v-col>
-							<v-col cols="12" md="6" class="d-none d-md-flex justify-center">
-								<v-img src="https://cdn.pixabay.com/photo/2020/05/18/16/17/social-media-5187243_960_720.png" max-width="500" contain></v-img>
-							</v-col>
-						</v-row>
-					</v-container>
+				<div class="wrapper">
+					<span></span>
+
+					<img src="/img/carrousel/2.png">
 				</div>
 			</v-carousel-item>
 
 			<v-carousel-item>
-				<div style="aspect-ratio: 3/5">
-					<h1>header 3</h1>
+				<div class="wrapper">
+					<span></span>
+
+					<img src="/img/carrousel/3.png">
 				</div>
 			</v-carousel-item>
 		</v-carousel>
@@ -160,9 +144,36 @@ export default defineComponent({
 	overflow: hidden;
 }
 
+.v-carousel {
+}
+
 .v-carousel-item {
 	background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
 	color: white;
+
+	.wrapper {
+		height: 100%;
+		width: 100%;
+		position: relative;
+
+		span {
+			display: block;
+			width: 100%;
+			aspect-ratio: calc(4400/1400);
+		}
+
+		img {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			object-fit: cover;
+			object-position: center
+		}
+	}
 }
 
 .hero-section::before {

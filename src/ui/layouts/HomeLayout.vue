@@ -12,7 +12,8 @@ export default {
 			items: [
 				{title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/console'},
 				{title: 'Configuración', icon: 'mdi-chat', to: '/config'},
-				{title: 'Chatbot', icon: '', to: '/chatbot'}
+				{title: 'Chatbot', icon: '', to: '/chatbot'},
+				{title: 'Tutoriales', icon: '', to: '/tutoriales'},
 			],
 		}
 	},

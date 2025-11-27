@@ -1,5 +1,7 @@
 <script>
 import ChatItem from "@Components/ChatItem.vue";
+import {useChatStore} from "../../stores/chat.store.ts";
+import NoChats from "../components/NoChats.vue";
 
 export default {
   name: 'ConsoleView',
@@ -47,7 +49,14 @@ export default {
     ],
     selected: undefined
   }),
-  components: {ChatItem}
+  components: {ChatItem, NoChats},
+	setup() {
+		const chatStore = useChatStore();
+
+		return {
+			chatStore
+		}
+	}
 }
 </script>
 
@@ -60,7 +69,7 @@ export default {
       <v-list
           lines="three"
       >
-        <v-list-item v-for="chat in chats" lines="three">
+        <v-list-item v-for="chat in chatStore.chats" lines="three">
           <v-card @click="selected = chat" :class="{selected: selected && selected.title === chat.title}">
             <v-avatar :image="chat.prependAvatar"/>
             <div>
@@ -73,28 +82,38 @@ export default {
       </v-list>
     </v-navigation-drawer>
 
-    <div v-if="selected" class="chat">
-      <div class="top">
-        <v-avatar :image="selected.prependAvatar"/>
-        <div class="data">
-          <h2>{{selected.title}}</h2>
-        </div>
-      </div>
+    <div class="chat">
+			<template v-if="chatStore.isEmpty">
+				<NoChats />
+			</template>
 
-      <div class="messages-container">
-        <div class="messages">
-          <div v-for="message in selected.messages" :class="message.from">
-            <v-card>
-              <p>{{message.message}}</p>
+			<template v-else-if="chatStore.actualIndex !== undefined">
 
-            </v-card>
-          </div>
-        </div>
-      </div>
+			</template>
 
-      <div class="editor">
+			<template v-else>
+				<div class="top">
+					<v-avatar :image="selected.prependAvatar"/>
+					<div class="data">
+						<h2>{{selected.title}}</h2>
+					</div>
+				</div>
 
-      </div>
+				<div class="messages-container">
+					<div class="messages">
+						<div v-for="message in selected.messages" :class="message.from">
+							<v-card>
+								<p>{{message.message}}</p>
+
+							</v-card>
+						</div>
+					</div>
+				</div>
+
+				<div class="editor">
+
+				</div>
+			</template>
     </div>
   </div>
 </template>

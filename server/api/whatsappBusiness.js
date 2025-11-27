@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {sharedCache} from "../utils/cache.js";
+import {writeFile} from "node:fs";
 
 const router = Router({strict: true})
 
@@ -44,8 +45,8 @@ const reStructQuery = (req, res, next) => {
     next()
 }
 
-router.get('/webhook', reStructQuery, requireAuth, (req, res) => {
-    console.log(req.query)
+router.get('/webhook', reStructQuery, (req, res) => {
+    console.log(req.queries)
     console.log(req.body)
 
     res.send(req.queries.hub.challenge)
@@ -54,8 +55,12 @@ router.get('/webhook', reStructQuery, requireAuth, (req, res) => {
 // 15 minutes TTL for deduplication of incoming messages
 const FIFTEEN_MIN_MS = 15 * 60 * 1000;
 
-router.post('/webhook', (req, res) => {
-    try {
+router.post('/webhook', async (req, res) => {
+	await writeFile(new URL('./webhook.json', import.meta.url), JSON.stringify({body: req.body, headers: req.headers}, null, 2), (err) => {
+		console.error(err.message, err.stack)
+	})
+
+	try {
         const entry = req.body?.entry?.[0];
         const change = entry?.changes?.[0];
         const value = change?.value;

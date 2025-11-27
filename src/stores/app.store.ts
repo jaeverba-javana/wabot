@@ -34,4 +34,4 @@ export const useAppStore = defineStore("app", () => {
 		setUser,
 		setChatbot
 	};
-})
+});

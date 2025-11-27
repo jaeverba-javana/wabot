@@ -112,9 +112,12 @@ mongoose.plugin(schema => {
 })
 
 export const mongooseConnect = () => {
-	mongoose.connect(
-			IS_PRODUCTION ? `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@zenit-test.ywuvq.mongodb.net/${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority&appName=zenit-test` : "mongodb://localhost:27017/Johan",
-	)
+	const cs = IS_PRODUCTION
+			? `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@zenit-test-shard-00-00.ywuvq.mongodb.net:27017,zenit-test-shard-00-01.ywuvq.mongodb.net:27017,zenit-test-shard-00-02.ywuvq.mongodb.net:27017/${process.env.MONGODB_DATABASE}?replicaSet=atlas-gfu6mk-shard-0&ssl=true&authSource=admin`
+			// ? `mongodb+srv://${Deno.env.get('MONGODB_USERNAME')}:${process.env.MONGODB_PASSWORD}@zenit-test.ywuvq.mongodb.net/${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority&appName=zenit-test`
+			: "mongodb://localhost:27017/Johan"
+
+	mongoose.connect(cs)
 			.then((_r) => {
 				console.log("Connected to MongoDB");
 			})

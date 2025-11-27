@@ -1,9 +1,9 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 
-export default defineComponent({
+export default {
   name: "AuthLayout"
-})
+}
 </script>
 
 <template>
@@ -40,7 +40,7 @@ height: 100dvh;
   justify-items: start;
   align-content: center;
 
-  background-image: url("/bot.jpg");
+  background-image: url("/img/Fondo.png");
   background-position: center;
   background-size: cover;
 }
