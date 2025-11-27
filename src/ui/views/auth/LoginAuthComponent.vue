@@ -4,14 +4,17 @@ import {useField, useForm} from "vee-validate";
 import { axiosApi } from '../../../utils/axios';
 import { useRouter } from 'vue-router';
 import {useToastStore} from "../../../stores/toast.store.ts";
+import {useAppStore} from "../../../stores/app.store.ts";
 
 
 
-export default defineComponent({
+export default {
   name: "LoginAuthComponent",
   setup() {
     const router = useRouter()
     const isLoading = ref(false);
+
+		const appStore = useAppStore();
 
     const {handleSubmit} = useForm({
       validationSchema: {
@@ -50,6 +53,8 @@ export default defineComponent({
         
         if (r.status === 200) {
           router.replace('/console')
+
+					appStore.fetch()
         }
         
       }).catch((r: any) => {
@@ -79,7 +84,7 @@ export default defineComponent({
       onSubmit
     }
   }
-})
+}
 </script>
 
 <template>
