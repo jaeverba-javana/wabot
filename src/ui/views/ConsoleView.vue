@@ -65,6 +65,7 @@ export default {
     <v-navigation-drawer
         permanent
         width="300"
+				elevation=2
     >
       <v-list
           lines="three"
@@ -82,39 +83,42 @@ export default {
       </v-list>
     </v-navigation-drawer>
 
-    <div class="chat">
-			<template v-if="chatStore.isEmpty">
-				<NoChats />
-			</template>
+		<div class="chat-wrapper">
+			<div class="chat">
+				<template v-if="chatStore.isEmpty">
+					<NoChats />
+				</template>
 
-			<template v-else-if="chatStore.actualIndex !== undefined">
+				<template v-else-if="chatStore.actualIndex !== undefined">
 
-			</template>
+				</template>
 
-			<template v-else>
-				<div class="top">
-					<v-avatar :image="selected.prependAvatar"/>
-					<div class="data">
-						<h2>{{selected.title}}</h2>
-					</div>
-				</div>
-
-				<div class="messages-container">
-					<div class="messages">
-						<div v-for="message in selected.messages" :class="message.from">
-							<v-card>
-								<p>{{message.message}}</p>
-
-							</v-card>
+				<template v-else>
+					<div class="top">
+						<v-avatar :image="selected.prependAvatar"/>
+						<div class="data">
+							<h2>{{selected.title}}</h2>
 						</div>
 					</div>
-				</div>
 
-				<div class="editor">
+					<div class="messages-container">
+						<div class="messages">
+							<div v-for="message in selected.messages" :class="message.from">
+								<v-card>
+									<p>{{message.message}}</p>
 
-				</div>
-			</template>
-    </div>
+								</v-card>
+							</div>
+						</div>
+					</div>
+
+					<div class="editor">
+
+					</div>
+				</template>
+			</div>
+		</div>
+
   </div>
 </template>
 
@@ -137,11 +141,23 @@ export default {
     }
   }
 
-  .chat {
-    flex: 1;
+	.chat-wrapper {
 
-    display: flex;
-    flex-direction: column;
+		flex: 1;
+		display: flex;
+
+
+		padding-left: 4px;
+	}
+
+  .chat {
+	  flex: 1;
+	  display: flex;
+
+	  flex-direction: column;
+
+
+	  box-shadow: var(--elevation2);
 
     .top {
       border-bottom: rgb(var(--v-theme-outline)) 1px solid;

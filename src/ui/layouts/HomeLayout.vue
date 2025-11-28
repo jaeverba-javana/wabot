@@ -29,7 +29,7 @@ export default {
 
 <template>
 	<v-app>
-		<v-navigation-drawer v-model="drawer" permanent>
+		<v-navigation-drawer elevation="5" v-model="drawer" permanent>
 			<v-list-item
 					title="WhatsApp Chatbot"
 					subtitle="Panel de Control"
