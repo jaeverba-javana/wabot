@@ -1,3 +1,5 @@
 export * from './userModel.js'
 export * from './chatbotModel.js'
 export * from './flowNode.model.js'
+export * from './conversation.model.js'
+export * from './messageModel.js'

@@ -2,7 +2,7 @@ import argon from "argon2";
 import {Router} from "express";
 
 import {tokenGenerate} from "./../utils/token.js"
-import {Chatbot, User} from './../db/mongoDb/models/index.js'
+import {ChatbotModel, User} from './../db/mongoDb/models/index.js'
 
 const router = Router({
 	strict: true
@@ -57,7 +57,7 @@ router.post('/register', async (req, res, next) => {
 						}
 				)
 
-				new Chatbot({
+				new ChatbotModel({
 					userId: user._id
 				})
 						.save()

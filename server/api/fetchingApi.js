@@ -1,7 +1,7 @@
 import {Router} from "express";
 import {authenticate} from "./auth.js";
 import {userController} from './../controller/index.js'
-import {Chatbot} from "../db/mongoDb/models/index.js";
+import {ChatbotModel} from "../db/mongoDb/models/index.js";
 import mongoose from "mongoose";
 
 
@@ -12,7 +12,7 @@ const router = Router({
 router.get('/accountInfo', async (req, res) => {
 	// const {email, phoneId} = req.body
 	// const user = userController.clean(req.user)
-	const chatbot = await Chatbot.findByUserId(req.user._id)
+	const chatbot = await ChatbotModel.findByUserId(req.user._id)
 
 	console.log(`chatbot ${chatbot instanceof mongoose.Document? 'si' : 'no'} es un documento`)
 

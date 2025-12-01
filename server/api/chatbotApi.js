@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { isAuthenticated } from '../api/auth.js';
-import { Chatbot } from './../db/mongoDb/models/index.js';
+import { ChatbotModel } from './../db/mongoDb/models/index.js';
 import {wabaApi} from "../utils/axios.js";
 
 const router = Router({
@@ -17,7 +17,7 @@ const requireAuth = async (req, res, next) => {
 }
 
 router.patch('/', async (req, res) => {
-	const chatbot = await Chatbot.findByUserId(req.user._id)
+	const chatbot = await ChatbotModel.findByUserId(req.user._id)
 	console.log(chatbot)
 	chatbot.phoneId = req.body.phoneId
 	chatbot.token = req.body.token
@@ -42,7 +42,7 @@ router.patch('/', async (req, res) => {
 // Get chatbot configuration for the current user
 router.get('/', async (req, res) => {
     try {
-        const chatbot = await Chatbot.findOne({ userId: req.user.userId });
+        const chatbot = await ChatbotModel.findOne({ userId: req.user.userId });
         if (!chatbot) {
             return res.status(404).json({ message: "No se encontró configuración de chatbot" });
         }
@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
         }
 
         // Find existing chatbot or create new one
-        let chatbotConfig = await Chatbot.findOne({ userId: req.user.userId });
+        let chatbotConfig = await ChatbotModel.findOne({ userId: req.user.userId });
 
         if (chatbotConfig) {
             // Update existing chatbot
@@ -74,7 +74,7 @@ router.post('/', async (req, res) => {
             await chatbotConfig.save();
         } else {
             // Create new chatbot
-            chatbotConfig = new Chatbot({
+            chatbotConfig = new ChatbotModel({
                 userId: req.user.userId,
                 business,
                 chatbot,
@@ -93,7 +93,7 @@ router.post('/', async (req, res) => {
 // Delete chatbot configuration
 router.delete('/', async (req, res) => {
     try {
-        const result = await Chatbot.deleteOne({ userId: req.user.userId });
+        const result = await ChatbotModel.deleteOne({ userId: req.user.userId });
         if (result.deletedCount === 0) {
             return res.status(404).json({ message: "No se encontró configuración de chatbot" });
         }

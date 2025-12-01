@@ -104,6 +104,15 @@ const chatbotSchema = new Schema({
 					resolve(chatbot?? new this({userId}).save());
 				}).catch(err => reject(err));
 			})
+		},
+		findByPhoneId: function (phoneId) {
+			return new Promise((resolve, reject) => {
+				this.findOne({
+					phoneId,
+				}).then(chatbot => {
+					resolve(chatbot);
+				}).catch(err => reject(err));
+			})
 		}
 	}
 });
@@ -123,4 +132,4 @@ chatbotSchema.set('toJSON', {
 // Ensure each user can only have one chatbot configuration
 // chatbotSchema.index({userId: 1}, {unique: true});
 
-export const Chatbot = model("Chatbot", chatbotSchema);
+export const ChatbotModel = model("Chatbot", chatbotSchema);

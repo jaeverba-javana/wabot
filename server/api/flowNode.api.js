@@ -1,13 +1,13 @@
 import {Router} from "express";
 import {authenticate} from "./auth.js";
 
-import {FlowNode} from "../db/mongoDb/models/index.js";
+import {FlowNodeModel} from "../db/mongoDb/models/index.js";
 
 const router = Router()
 
 router.get('/byChatbotId/:chatbotId', (req, res) => {
 	// console.log(req.params.chatbotId)
-	FlowNode.findByChatbotId(req.params.chatbotId)
+	FlowNodeModel.findByChatbotId(req.params.chatbotId)
 			.then((flowNodes) => {
 				// console.log(flowNodes)
 
@@ -20,12 +20,12 @@ router.get('/byChatbotId/:chatbotId', (req, res) => {
 })
 
 router.patch('/', async (req, res) => {
-	const r = await FlowNode.updateOneSet({_id: req.body._id}, req.body)
+	const r = await FlowNodeModel.updateOneSet({_id: req.body._id}, req.body)
 	res.send({message: r})
 })
 
 router.post('/', async (req, res) => {
-	const flowNode = new FlowNode({
+	const flowNode = new FlowNodeModel({
 		...req.body
 	})
 
@@ -44,7 +44,7 @@ export default Router()
 						promises.push(
 								new Promise((resolve, reject) => {
 									const cos = {_id: node._id}
-									FlowNode.updateOne({_id: node._id}, node)
+									FlowNodeModel.updateOne({_id: node._id}, node)
 											.then((result) => {
 												resolve({...cos, ...result})
 											})

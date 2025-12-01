@@ -28,13 +28,13 @@ const optionSchema = new mongoose.Schema({
 	text: {type: String, required: true},
 	description: String,
 	nextNodeId: {type: String, required: false},
-	button_type: {
+	buttonType: {
 		type: String,
 		enum: ['reply', 'url', 'phone'],
 		default: 'reply'
 	},
 	url: String,
-	phone_number: String,
+	phoneNumber: String,
 })
 
 const flowNodeSchema = new mongoose.Schema(
@@ -121,12 +121,15 @@ const flowNodeSchema = new mongoose.Schema(
 				getNextNode: async function (userResponse) {
 					// Si hay opciones (botones), buscar coincidencia
 					if (this.options && this.options.length > 0) {
-						const matchedOption = this.options.find(opt => opt.option_id === userResponse || opt.text.toLowerCase() === userResponse.toLowerCase());
+						const matchedOption = this.options.find(opt => opt.text === userResponse);
 
 						if (matchedOption) {
-							return await mongoose.model('FlowNode').findByNodeId(this.chatbotId, matchedOption.next_node_id);
+							return await mongoose.model('FlowNode').findByNodeId(this.chatbotId, matchedOption.nextNodeId);
 						}
 					}
+
+					console.error('Debió, pero no encontró ninguna coincidencia para la' +
+							' respuesta:', userResponse, 'en el nodo:', this.name)
 
 					// Si hay patrones, intentar match
 					if (this.patterns && this.patterns.length > 0) {
@@ -200,8 +203,9 @@ const flowNodeSchema = new mongoose.Schema(
 			},
 			statics: {
 				findStartNode: function (chatbotId) {
+					console.log('Looking for start node with chatbotId:', chatbotId)
 					return this.findOne({
-						chatbotId: chatbotId, is_start: true, //is_active: true
+						chatbotId: chatbotId, nodeType: 'start', //is_active: true
 					});
 				},
 				findByChatbotId: function (chatbotId) {
@@ -223,7 +227,7 @@ const flowNodeSchema = new mongoose.Schema(
 				findByNodeId: function (chatbotId, nodeId) {
 					return this.findOne({
 						chatbotId: chatbotId,
-						_id: nodeId,
+						name: nodeId,
 						//is_active: true
 					});
 				}
@@ -234,9 +238,9 @@ const flowNodeSchema = new mongoose.Schema(
 
 // Índices compuestos
 flowNodeSchema.index({chatbotId: 1, name: 1}, {unique: true});
-flowNodeSchema.index({chatbotId: 1, isStart: 1}, {
+flowNodeSchema.index({chatbotId: 1, nodeType: 1}, {
 	unique: true,
-	partialFilterExpression: {isStart: true}
+	partialFilterExpression: {nodeType: 'start'}
 });
 // flowNodeSchema.index({chatbotId: 1, isActive: 1});
 
@@ -368,4 +372,4 @@ flowNodeSchema.methods.validateFlow = async function () {
 };
 */
 
-export const FlowNode = mongoose.model('FlowNode', flowNodeSchema);
+export const FlowNodeModel = mongoose.model('FlowNode', flowNodeSchema);
