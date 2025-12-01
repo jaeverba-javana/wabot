@@ -14,6 +14,10 @@ export const routes: RouteRecordRaw[] = [
 				name: 'Landing',
 				component: () => import('@/ui/views/root/MainRootView.vue')
 			}, {
+			path: 'docs',
+				name: 'Docs',
+				component: () => import('@/ui/views/root/DocsRootView.vue')
+			}, {
 			path: 'politica-privacidad',
 				name: 'PolicyPrivacy',
 				component: () => import('@/ui/views/root/PrivacyPolicyRootView.vue')

@@ -8,7 +8,7 @@
 
 		<v-row>
 			<v-col cols="1" md="12">
-				<v-card class="mb-4">
+				<v-card style="position: relative" class="mb-4">
 					<v-card-title>Información del Negocio</v-card-title>
 					<v-card-text>
 						<v-form ref="businessForm">
@@ -93,6 +93,41 @@
 								</v-btn>
 							</v-col>
 						</v-form>
+					</v-card-text>
+				</v-card>
+
+				<v-card style="overflow-y: auto" class="mb-4">
+					<v-card-title>Configuración del Webhook</v-card-title>
+					<v-card-text>
+						<span>Ingrese estos datos en meta para conectar el Webhook</span>
+						<v-card class="mt-4 pa-4" variant="outlined">
+							<div class="d-flex align-center justify-space-between mb-2">
+								<span class="text-subtitle-2">URL del Webhook</span>
+								<v-btn size="small" variant="text"
+											 @click="copyWebhookUrl">
+									<SVGIcon style="width: 24px;color:rojo" type="mdi"
+													 :path="icon.copy"/>
+									<v-tooltip activator="parent" location="top">Copiar URL
+									</v-tooltip>
+								</v-btn>
+							</div>
+							<span class="text-body-2 text-medium-emphasis">{{
+									webhookUrl
+								}}</span>
+						</v-card>
+						<v-card class="mt-4 pa-4" variant="outlined">
+							<div class="d-flex align-center justify-space-between mb-2">
+								<span class="text-subtitle-2">Token Para el Desafio</span>
+								<v-btn size="small" variant="text"
+											 @click="copyWebhookUrl">
+									<SVGIcon style="width: 24px;color:rojo" type="mdi"
+													 :path="icon.copy"/>
+									<v-tooltip activator="parent" location="top">Copiar URL
+									</v-tooltip>
+								</v-btn>
+							</div>
+							<span class="text-body-2 text-medium-emphasis">Js3xis2oCy6Wils5uFK7tGkGDrXaFCVV</span>
+						</v-card>
 					</v-card-text>
 				</v-card>
 			</v-col>
@@ -188,14 +223,17 @@
 </template>
 
 <script lang="ts">
+import { mdiContentCopy } from '@mdi/js';
 import {useField} from "vee-validate";
 import {useAppStore} from "@/stores/app.store.js";
 import {computed, watch} from 'vue'
 import {axiosApi} from "../../utils/axios.ts";
 import {useToastStore} from '@/stores/toast.store.ts'
+import SVGIcon from "@jamescoyle/vue-icon/lib/svg-icon.vue";
 
 export default {
 	name: 'ChatbotView',
+	components: {SVGIcon},
 	data() {
 		return {
 			isOtpActive: false,
@@ -206,6 +244,8 @@ export default {
 	setup() {
 
 		const appStore = useAppStore()
+
+		const webhookUrl = computed(() => `${window.location.origin}/api/wab/webhook`)
 
 		/*const business = {
 			email: useField('businessEmail'),
@@ -280,13 +320,26 @@ export default {
 
 		return {
 			fields: {business, chatbot},
-			appStore
+			appStore,
+			icon: {copy: mdiContentCopy},
+			webhookUrl
 		}
 	},
 	mounted() {
 		// this.fetchChatbotConfig();
 	},
 	methods: {
+		copyWebhookUrl() {
+			navigator.clipboard.writeText(this.webhookUrl)
+					.then(() => {
+					const toast = useToastStore();
+					toast.show('URL copiada al portapapeles', 'success');
+				})
+				.catch(() => {
+					const toast = useToastStore();
+					toast.show('Error al copiar URL', 'error');
+				});
+		},
 		addResponse() {
 			this.predefinedResponses.push({
 				keyword: '',
@@ -352,5 +405,10 @@ export default {
 <style scoped>
 .v-card {
 	border-radius: 8px;
+}
+
+.v-container {
+	height: 100%;
+	overflow-y: auto;
 }
 </style>

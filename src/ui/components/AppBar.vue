@@ -21,7 +21,9 @@ export default {
 			arrow: mdiArrowTopRight
 		}
 
-		return {appStore, mdi};
+		const GUIDE_PDF_PATH = '/docs/guide.pdf';
+
+		return {appStore, mdi, GUIDE_PDF_PATH};
 	},
 	methods: {
 		logout() {
@@ -29,6 +31,9 @@ export default {
 			document.cookie = "SESSION_TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 			// Reload the page
 			window.location.reload();
+		},
+		openGuide() {
+			window.open(this.GUIDE_PDF_PATH, '_blank');
 		}
 	}
 }
@@ -41,14 +46,14 @@ export default {
 				<div class="wrapper">
 
 					<div class="logo">
-						<img src="/img/logo/Propuesta 3.png" alt="logo"/>
+						<img src="/img/logo/Propuesta 1.png" alt="logo"/>
 					</div>
 				</div>
 			</v-app-bar-title>
 
 			<v-spacer></v-spacer>
 
-			<v-btn to="/doc" color="secondary" variant="text" class="me-2">
+			<v-btn to="/docs" color="secondary" variant="text" class="me-2">
 				Tutoriales
 
 				<template v-slot:prepend>
@@ -56,7 +61,9 @@ export default {
 				</template>
 			</v-btn>
 
-			<v-btn to="/doc" color="secondary" variant="text" class="me-2">
+			<v-btn @click="openGuide" target="_blank"
+						 color="secondary"
+						 variant="text" class="me-2">
 				Gu&iacute;a
 
 				<template v-slot:prepend>

@@ -1,5 +1,5 @@
 import process from "node:process";
-import mongoose from 'mongoose';
+import mongoose, {Schema, Model} from 'mongoose';
 import {IS_PRODUCTION} from "./../../utils/contants.js";
 import {Router} from "express";
 
@@ -58,8 +58,9 @@ mongoose.plugin(schema => {
 
 		const check = (schema, basePath = '') => {
 			console.log('creating route for ', basePath)
-			const route = router.route(`${basePath}`)
-			route.checkout((req, res) => {
+			const subRouter = Router({strict: true});
+			const route = router.use(basePath, subRouter);
+			subRouter.checkout('/', (req, res) => {
 				try {
 					// Create temporary model instance to validate
 					const TempModel = mongoose.model('TempModel', schema);
@@ -85,13 +86,21 @@ mongoose.plugin(schema => {
 				}
 			})
 
-			route.trace((req, res) => {
+			subRouter.trace('/',(req, res) => {
 				res.send(schema.obj)
 			})
 
-			Object.entries(schema.obj).forEach(([key, value]) => {
-				// console.log(value.type instanceof mongoose.Schema)
+			subRouter.get('/all', (req, res) => {
+				const filter = req.query ? Object.fromEntries(
+						Object.entries(req.query).filter(([_, value]) => value !== undefined)
+				) : {};
 
+				this.find(filter)
+						.sort()
+						.then(docs => res.send(docs))
+			})
+
+			Object.entries(schema.obj).forEach(([key, value]) => {
 				if (value instanceof Array) {
 					const v = value[0]
 					if (v instanceof mongoose.Schema) {
@@ -111,7 +120,7 @@ mongoose.plugin(schema => {
 	}
 })
 
-export const mongooseConnect = () => {
+export const mongooseConnect = ()=> {
 	const cs = IS_PRODUCTION
 			? `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@zenit-test-shard-00-00.ywuvq.mongodb.net:27017,zenit-test-shard-00-01.ywuvq.mongodb.net:27017,zenit-test-shard-00-02.ywuvq.mongodb.net:27017/${process.env.MONGODB_DATABASE}?replicaSet=atlas-gfu6mk-shard-0&ssl=true&authSource=admin`
 			// ? `mongodb+srv://${Deno.env.get('MONGODB_USERNAME')}:${process.env.MONGODB_PASSWORD}@zenit-test.ywuvq.mongodb.net/${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority&appName=zenit-test`

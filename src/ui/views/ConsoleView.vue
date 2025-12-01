@@ -2,54 +2,20 @@
 import ChatItem from "@Components/ChatItem.vue";
 import {useChatStore} from "../../stores/chat.store.ts";
 import NoChats from "../components/NoChats.vue";
+import ChatViewer from "../components/ChatViewer.vue";
 
 export default {
   name: 'ConsoleView',
   data: () => ({
-    chats: [
-      {
-        prependAvatar: '/img/chats/img.png',
-        title: 'Javier Vergara',
-        subtitle: `Vamos a darle caña`,
-        messages: [
-          {
-            from: "d",
-            message: 'Hola'
-          }, {
-            from: "c",
-            message: 'Qué tal, ¿Cómo has estado?'
-          }, {
-            from: "d",
-            message: 'Muy bien, gracias. ¿y tú?'
-          }
-        ]
-      },
-      {
-        prependAvatar: '/img/chats/img_1.png',
-        title: 'Daniela León',
-        subtitle: `Me gustas`,
-      },
-      {
-        prependAvatar: '/img/chats/img_4.png',
-        title: 'Juanito Juarez',
-        subtitle: `Oye, sabes dónde está mi mamá?`,
-      },
-      {
-        prependAvatar: '/img/chats/img_3.png',
-        title: 'Jaris Salom',
-        subtitle: `Tráeme comida, que tengo hambre`,
-      },
-    ],
     items: [
       {type: 'subheader', title: 'Chats'},
 
       {type: 'divider', inset: true},
       {type: 'divider', inset: true},
       {type: 'divider', inset: true},
-    ],
-    selected: undefined
+    ]
   }),
-  components: {ChatItem, NoChats},
+  components: {ChatItem, NoChats, ChatViewer},
 	setup() {
 		const chatStore = useChatStore();
 
@@ -67,20 +33,16 @@ export default {
         width="300"
 				elevation=2
     >
-      <v-list
-          lines="three"
-      >
-        <v-list-item v-for="chat in chatStore.chats" lines="three">
-          <v-card @click="selected = chat" :class="{selected: selected && selected.title === chat.title}">
-            <v-avatar :image="chat.prependAvatar"/>
-            <div>
-              <v-list-item-title>{{ chat.title }}</v-list-item-title>
-              <v-list-item-subtitle>{{ chat.subtitle }}</v-list-item-subtitle>
-
-            </div>
-          </v-card>
-        </v-list-item>
-      </v-list>
+      <ul>
+				<li v-for="chat in chatStore.chats" :key="chat._id"
+						@click="chatStore.selectChat(chat._id)" :class="{selected: chat._id
+						=== chatStore.actualChatId}">
+					<div>
+						<h3>{{chat.userPhone}}</h3>
+						<span>{{chat.lastMessagePreview}}</span>
+					</div>
+				</li>
+			</ul>
     </v-navigation-drawer>
 
 		<div class="chat-wrapper">
@@ -89,32 +51,11 @@ export default {
 					<NoChats />
 				</template>
 
-				<template v-else-if="chatStore.actualIndex !== undefined">
-
+				<template v-else-if="chatStore.actualChatId !== undefined">
+					<ChatViewer />
 				</template>
 
 				<template v-else>
-					<div class="top">
-						<v-avatar :image="selected.prependAvatar"/>
-						<div class="data">
-							<h2>{{selected.title}}</h2>
-						</div>
-					</div>
-
-					<div class="messages-container">
-						<div class="messages">
-							<div v-for="message in selected.messages" :class="message.from">
-								<v-card>
-									<p>{{message.message}}</p>
-
-								</v-card>
-							</div>
-						</div>
-					</div>
-
-					<div class="editor">
-
-					</div>
 				</template>
 			</div>
 		</div>
@@ -127,10 +68,29 @@ export default {
   display: flex;
   height: 100%;
 
-  .v-list-item {
-    cursor: pointer;
-    padding: 0;
-  }
+  ul {
+		li {
+			padding: .25rem 1rem;
+			cursor: pointer;
+
+			&:hover {
+				background-color: rgb(var(--v-theme-surface-variant), .06);
+			}
+
+			&.selected {
+				background-color: rgb(var(--v-theme-surface-variant), .11);
+			}
+
+			& + & {
+				border-top: rgb(var(--v-theme-outline)) 1px solid;
+			}
+
+			span {
+				font-size: .8rem;
+				margin-top: -.25rem;
+			}
+		}
+	}
 
   .v-card {
     display: flex;
@@ -158,6 +118,10 @@ export default {
 
 
 	  box-shadow: var(--elevation2);
+
+		overflow: hidden;
+
+		position: relative;
 
     .top {
       border-bottom: rgb(var(--v-theme-outline)) 1px solid;
@@ -201,11 +165,6 @@ export default {
           padding: .5rem;
         }
       }
-    }
-
-    .editor {
-      border-top: rgb(var(--v-theme-outline)) 1px solid;
-      height: 40px;
     }
   }
 }
