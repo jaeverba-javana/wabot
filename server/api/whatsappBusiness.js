@@ -97,7 +97,8 @@ router.post('/webhook', async (req, res) => {
 							content: {
 								//messages[0][messages[0]['type']]
 								body: messages[0]['text']?.['body']??
-										messages[0]['interactive']?.['button_reply']?.['title']
+										messages[0]['interactive']?.['button_reply']?.['title']??
+										messages[0]['interactive']?.['list_reply']?.['title']
 							},
 						});
 
