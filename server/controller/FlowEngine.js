@@ -40,7 +40,8 @@ class FlowEngine {
 					return {
 						shouldSend: true,
 						message: {
-							text: 'Lo siento, no entendí tu respuesta. Vamos a empezar de nuevo.',
+							text: {body:'Lo siento, no entendí tu respuesta. Vamos a empezar' +
+										' de nuevo.'},
 							type: 'text'
 						},
 						action: 'restart_flow'
@@ -51,7 +52,8 @@ class FlowEngine {
 				return {
 					shouldSend: true,
 					message: {
-						text: 'No entendí tu respuesta. Por favor, selecciona una de las opciones disponibles.',
+						text: {body: 'No entendí tu respuesta. Por favor, selecciona una de' +
+									' las opciones disponibles.'},
 						type: 'text'
 					},
 					action: 'retry'

@@ -18,6 +18,10 @@ export const routes: RouteRecordRaw[] = [
 				name: 'Docs',
 				component: () => import('@/ui/views/root/DocsRootView.vue')
 			}, {
+			path: 'quienes-somos',
+				name: 'QuienesSomos',
+				component: () => import ('@/ui/views/QuienesSomos.vue')
+			}, {
 			path: 'politica-privacidad',
 				name: 'PolicyPrivacy',
 				component: () => import('@/ui/views/root/PrivacyPolicyRootView.vue')

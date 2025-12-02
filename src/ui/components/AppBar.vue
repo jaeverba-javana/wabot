@@ -3,7 +3,8 @@ import {
 	mdiArrowTopRight,
 	mdiLogout,
 	mdiSwapVerticalVariant,
-	mdiBookOpenBlankVariantOutline
+	mdiBookOpenBlankVariantOutline,
+	mdiAccountGroup
 } from "@mdi/js";
 import {useAppStore} from "../../stores/app.store.ts";
 import SVGIcon from "@jamescoyle/vue-icon/lib/svg-icon.vue";
@@ -18,7 +19,8 @@ export default {
 			logout: mdiLogout,
 			swap: mdiSwapVerticalVariant,
 			book: mdiBookOpenBlankVariantOutline,
-			arrow: mdiArrowTopRight
+			arrow: mdiArrowTopRight,
+			group: mdiAccountGroup
 		}
 
 		const GUIDE_PDF_PATH = '/docs/guide.pdf';
@@ -52,6 +54,14 @@ export default {
 			</v-app-bar-title>
 
 			<v-spacer></v-spacer>
+
+			<v-btn to="/quienes-somos" color="secondary" variant="text" class="me-2">
+				Quienes Somos
+
+				<template v-slot:prepend>
+					<SVGIcon type="mdi" :path="mdi.group"/>
+				</template>
+			</v-btn>
 
 			<v-btn to="/docs" color="secondary" variant="text" class="me-2">
 				Tutoriales
@@ -107,10 +117,16 @@ export default {
 	align-items: center;
 	position: relative;
 
+	.logo {
+		width: 60px;
+		height: 60px;
+	}
+
 	img {
 		height: 60px;
 		width: 60px;
-		transform: scale(1.7);
+
+		//transform: scale(1.7);
 	}
 }
 </style>
