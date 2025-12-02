@@ -171,10 +171,15 @@ class FlowEngine {
 
 		// Agregar header y footer si existen
 		if (node.message.header && message[message.type]) {
-			message[message.type].header = {
-				type: 'text',
-				text: node.message.header
-			};
+			if (message.type === 'text') {
+				message.text.body = `*${node.message.header}*\n\n${message.text.body}`;
+			} else {
+				message[message.type].header = {
+					type: 'text',
+					text: node.message.header
+				};
+			}
+
 		}
 		if (node.message.footer && message[message.type]) {
 			message[message.type].footer = {
