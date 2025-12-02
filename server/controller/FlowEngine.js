@@ -154,7 +154,7 @@ class FlowEngine {
 						sections: [{
 							title: 'Opciones',
 							rows: node.options.map(opt => ({
-								id: opt.option_id,
+								id: opt._id,
 								title: opt.text,
 								description: opt.description || ''
 							}))
