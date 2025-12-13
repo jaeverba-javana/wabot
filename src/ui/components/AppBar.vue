@@ -43,18 +43,28 @@ export default {
 
 <template>
 	<v-app-bar color="transparent" elevation="3" app>
-		<v-container class="py-0 fill-height">
-			<v-app-bar-title class="text-h6 font-weight-bold">
+		<!--		<v-container class="py-0 fill-height">-->
+		<div class="vAppBar">
+			<div class="container">
+<!--		<v-app-bar-title class="text-h6 font-weight-bold">-->
+			<div class="logos">
 				<div class="wrapper">
 
 					<div class="logo">
 						<img src="/img/logo/Propuesta 1.png" alt="logo"/>
 					</div>
+
+					<div class="uni">
+						<img src="/img/U.png"/>
+					</div>
 				</div>
-			</v-app-bar-title>
+			</div>
 
-			<v-spacer></v-spacer>
+<!--		</v-app-bar-title>-->
 
+<!--		<v-spacer></v-spacer>-->
+
+		<nav class="buttons">
 			<v-btn to="/quienes-somos" color="secondary" variant="text" class="me-2">
 				Quienes Somos
 
@@ -102,7 +112,10 @@ export default {
 					Registrarse
 				</v-btn>
 			</template>
-		</v-container>
+		</nav>
+			</div>
+		</div>
+		<!--		</v-container>-->
 	</v-app-bar>
 </template>
 
@@ -112,21 +125,58 @@ export default {
 	margin: 0 12px;
 }
 
-.v-toolbar-title .wrapper {
+.buttons {
 	display: flex;
-	align-items: center;
+	padding-right: 1rem;
+}
+
+.vAppBar {
+	width: 100%;
+	display: flex;
 	position: relative;
+	height: 100%;
+	justify-content: center;
+}
+
+.vAppBar .container {
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	display: flex;
+	max-width: 1200px;
+	justify-content: space-between;
+
+
+	.logos .wrapper {
+		height: 100%;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
 
 	.logo {
 		width: 60px;
 		height: 60px;
+
+		img {
+			height: 60px;
+
+			//transform: scale(1.7);
+		}
 	}
 
-	img {
-		height: 60px;
-		width: 60px;
+	.v-app-bar-title {
+		width: fit-content !important;
+		min-width: 200px;
+	}
 
-		//transform: scale(1.7);
+	.uni {
+		height: 100%;
+	}
+
+	.uni, .uni img {
+		height: 45px;
+		width: 200px;
 	}
 }
 </style>

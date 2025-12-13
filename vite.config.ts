@@ -18,6 +18,9 @@ export default defineConfig({
     }
   },
 	server: {
-		allowedHosts: ["ipjutn-ip-186-169-202-190.tunnelmole.net"]
+		allowedHosts: true
+	},
+	test: {
+
 	}
 })
